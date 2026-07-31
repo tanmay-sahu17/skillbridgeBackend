@@ -7,7 +7,7 @@ module.exports = {
     origin: process.env.CORS_ORIGIN || '*',
   },
   jwt: {
-    secret: process.env.JWT_SECRET || 'dev_secret_jwt_key_should_be_replaced_in_production',
+    secret: process.env.JWT_SECRET || 'secretKEY',
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   },
 };

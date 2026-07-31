@@ -17,17 +17,13 @@ const HTTP_STATUS = {
   SERVICE_UNAVAILABLE: 503,
 };
 
-/**
- * User Roles
- */
+
 const USER_ROLES = {
   USER: 'user',
   ADMIN: 'admin',
 };
 
-/**
- * Development Environment constants
- */
+
 const ENVIRONMENTS = {
   DEVELOPMENT: 'development',
   PRODUCTION: 'production',
