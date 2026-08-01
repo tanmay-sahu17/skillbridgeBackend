@@ -1,28 +1,47 @@
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const morgan = require('morgan');
-const compression = require('compression');
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import compression from 'compression';
+import cookieParser from 'cookie-parser';
 
-const errorHandler = require('./middlewares/error.middleware');
+import errorHandler from './middlewares/error.middleware.js';
+import authRoutes from './modules/auth/auth.route.js';
+import collegeRoutes from './modules/college/college.route.js';
 
 const app = express();
 
+// ── Security & Parsing Middlewares ──
 app.use(helmet());
 app.use(cors());
 app.use(morgan('dev'));
 app.use(compression());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
+// ── Health Check ──
 app.get('/health', (req, res) => {
-  res.status(200).json({ success: true, message: 'Server is up and running!' });
+  res.status(200).json({
+    success: true,
+    data: {
+      status: 'UP',
+      timestamp: new Date().toISOString(),
+    },
+    message: 'System health is optimal.',
+  });
 });
 
-app.use((req, res, next) => {
+// ── API Routes (v1) ──
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/college', collegeRoutes);
+
+// ── 404 Handler ──
+app.use((req, res) => {
   res.status(404).json({ success: false, message: 'Route not found' });
 });
 
+// ── Global Error Handler ──
 app.use(errorHandler);
 
-module.exports = app;
+export default app;

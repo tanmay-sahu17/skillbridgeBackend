@@ -1,0 +1,168 @@
+// SkillBridge — Prisma Schema for MongoDB
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+}
+
+// ==================== ENUMS ====================
+
+enum Role {
+  COLLEGE
+  STUDENT
+  RECRUITER
+  TPO
+  ADMIN
+}
+
+enum CollegeType {
+  GOVERNMENT
+  PRIVATE
+  AUTONOMOUS
+  DEEMED
+}
+
+enum CampusType {
+  SINGLE
+  MULTIPLE
+}
+
+enum Designation {
+  PRINCIPAL
+  DIRECTOR
+  TPO
+  DEAN
+  HOD
+  FACULTY
+  ADMIN_STAFF
+}
+
+enum CollegeStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}
+
+// ==================== COMPOSITE TYPES (Embedded Documents) ====================
+
+type SocialLinks {
+  linkedin  String?
+  facebook  String?
+  instagram String?
+}
+
+type CollegeBasicInfo {
+  collegeName          String
+  shortName            String?
+  collegeType          CollegeType
+  establishmentYear    Int
+  affiliatedUniversity String
+  accreditations       String[]
+}
+
+type CollegeContactInfo {
+  officialEmail    String
+  officialMobile   String
+  alternateContact String?
+  officialWebsite  String
+  socialLinks      SocialLinks?
+}
+
+type CollegeAddress {
+  country         String
+  state           String
+  district        String
+  city            String
+  pinCode         String
+  completeAddress String
+}
+
+type CollegeRepresentative {
+  fullName      String
+  designation   Designation
+  officialEmail String
+  mobileNumber  String
+  employeeId    String?
+}
+
+type CollegeDocumentInfo {
+  collegeLogo         String
+  affiliationCert     String
+  authorizationLetter String
+  naacCertificate     String?
+  nirfCertificate     String?
+  collegeBrochure     String?
+  gstCertificate      String?
+  otherCertificates   String[]
+}
+
+type CollegeAcademicInfo {
+  totalDepartments Int
+  totalCourses     Int
+  totalStudents    Int
+  totalFaculty     Int
+  campusType       CampusType
+}
+
+type CollegePlatformPreferences {
+  allowStudentSelfRegistration Boolean
+  studentApprovalRequired      Boolean
+  allowAlumniRegistration      Boolean
+  allowCompanyCollaborations   Boolean
+}
+
+type CollegeVerification {
+  emailVerified  Boolean
+  mobileVerified Boolean
+}
+
+// ==================== MODELS ====================
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String   @unique
+  password  String
+  role      Role
+  isActive  Boolean  @default(true)
+  college   College?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model College {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  userId String @unique @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id])
+
+  // Section-wise embedded data
+  basicInfo           CollegeBasicInfo?
+  contactInfo         CollegeContactInfo?
+  address             CollegeAddress?
+  representative      CollegeRepresentative?
+  documents           CollegeDocumentInfo?
+  academicInfo        CollegeAcademicInfo?
+  platformPreferences CollegePlatformPreferences?
+  verification        CollegeVerification?
+
+  // Onboarding tracking
+  currentStep         Int     @default(1)
+  completedSections   Int[]   @default([])
+  onboardingCompleted Boolean @default(false)
+
+  // Section 9: Terms & Declaration
+  termsAccepted       Boolean @default(false)
+  authorizedConfirmed Boolean @default(false)
+  accuracyConfirmed   Boolean @default(false)
+
+  // Admin review
+  status CollegeStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

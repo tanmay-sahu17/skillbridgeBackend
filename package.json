@@ -8,6 +8,15 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "lint": "echo \"Error: no lint script specified\" && exit 0",
+    "test": "jest --passWithNoTests",
+    "test:watch": "jest --watch --passWithNoTests",
+    "prisma:generate": "npx prisma generate",
+    "prisma:validate": "npx prisma validate",
+    "prisma:push": "npx prisma db push",
+    "prisma:pull": "npx prisma db pull",
+    "prisma:studio": "npx prisma studio",
+    "prisma:reset": "npx prisma db push --force-reset",
+    "postinstall": "npx prisma generate",
     "prepare": "husky"
   },
   "keywords": [
@@ -22,8 +31,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@prisma/client": "^7.9.1",
     "bcryptjs": "^2.4.3",
     "bullmq": "^6.0.2",
+    "cloudinary": "^2.10.0",
     "compression": "^1.7.4",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -33,7 +44,6 @@
     "helmet": "^7.1.0",
     "ioredis": "^6.0.0",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.5.1",
     "morgan": "^1.10.0",
     "multer": "^2.2.0",
     "nodemailer": "^9.0.3",
@@ -47,6 +57,7 @@
     "husky": "^9.1.7",
     "jest": "^30.4.2",
     "nodemon": "^3.1.4",
+    "prisma": "^7.9.1",
     "supertest": "^7.2.2"
   }
 }

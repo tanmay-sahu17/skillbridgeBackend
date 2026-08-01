@@ -1,7 +1,7 @@
 /**
  * System-wide HTTP Status Codes
  */
-const HTTP_STATUS = {
+export const HTTP_STATUS = {
   OK: 200,
   CREATED: 201,
   ACCEPTED: 202,
@@ -17,21 +17,47 @@ const HTTP_STATUS = {
   SERVICE_UNAVAILABLE: 503,
 };
 
-
-const USER_ROLES = {
-  USER: 'user',
-  ADMIN: 'admin',
+/**
+ * User Roles (matches Prisma enum)
+ */
+export const USER_ROLES = {
+  COLLEGE: 'COLLEGE',
+  STUDENT: 'STUDENT',
+  RECRUITER: 'RECRUITER',
+  TPO: 'TPO',
+  ADMIN: 'ADMIN',
 };
 
-
-const ENVIRONMENTS = {
+/**
+ * Environment names
+ */
+export const ENVIRONMENTS = {
   DEVELOPMENT: 'development',
   PRODUCTION: 'production',
   TEST: 'test',
 };
 
-module.exports = {
-  HTTP_STATUS,
-  USER_ROLES,
-  ENVIRONMENTS,
+/**
+ * Onboarding section numbers (1-9)
+ */
+export const ONBOARDING_SECTIONS = {
+  BASIC_INFO: 1,
+  CONTACT_INFO: 2,
+  ADDRESS: 3,
+  REPRESENTATIVE: 4,
+  DOCUMENTS: 5,
+  ACADEMIC_INFO: 6,
+  PLATFORM_PREFERENCES: 7,
+  VERIFICATION: 8,
+  TERMS: 9,
+};
+
+/**
+ * College registration statuses (matches Prisma enum)
+ */
+export const COLLEGE_STATUS = {
+  PENDING: 'PENDING',
+  UNDER_REVIEW: 'UNDER_REVIEW',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
 };
