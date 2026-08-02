@@ -14,6 +14,7 @@ export const registerSchema = z.object({
     invalid_type_error:
       'Invalid role. Must be one of: COLLEGE, STUDENT, RECRUITER, TPO',
   }),
+  collegeId: z.string().optional(),
 });
 
 export const loginSchema = z.object({
