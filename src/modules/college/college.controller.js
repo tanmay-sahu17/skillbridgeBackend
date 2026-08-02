@@ -19,14 +19,14 @@ import {
  */
 export const saveBasicInfo = asyncHandler(async (req, res) => {
   const data = basicInfoSchema.parse(req.body);
-  await collegeService.saveBasicInfo(req.user.id, data);
+  const updated = await collegeService.saveBasicInfo(req.user.id, data);
 
   res
     .status(HTTP_STATUS.OK)
     .json(
       new ApiResponse(
         HTTP_STATUS.OK,
-        null,
+        updated.basicInfo,
         'Basic information saved successfully.'
       )
     );
@@ -38,14 +38,14 @@ export const saveBasicInfo = asyncHandler(async (req, res) => {
  */
 export const saveContactInfo = asyncHandler(async (req, res) => {
   const data = contactInfoSchema.parse(req.body);
-  await collegeService.saveContactInfo(req.user.id, data);
+  const updated = await collegeService.saveContactInfo(req.user.id, data);
 
   res
     .status(HTTP_STATUS.OK)
     .json(
       new ApiResponse(
         HTTP_STATUS.OK,
-        null,
+        updated.contactInfo,
         'Contact information saved successfully.'
       )
     );
@@ -57,14 +57,14 @@ export const saveContactInfo = asyncHandler(async (req, res) => {
  */
 export const saveAddress = asyncHandler(async (req, res) => {
   const data = addressSchema.parse(req.body);
-  await collegeService.saveAddress(req.user.id, data);
+  const updated = await collegeService.saveAddress(req.user.id, data);
 
   res
     .status(HTTP_STATUS.OK)
     .json(
       new ApiResponse(
         HTTP_STATUS.OK,
-        null,
+        updated.address,
         'Address details saved successfully.'
       )
     );
@@ -76,14 +76,14 @@ export const saveAddress = asyncHandler(async (req, res) => {
  */
 export const saveRepresentative = asyncHandler(async (req, res) => {
   const data = representativeSchema.parse(req.body);
-  await collegeService.saveRepresentative(req.user.id, data);
+  const updated = await collegeService.saveRepresentative(req.user.id, data);
 
   res
     .status(HTTP_STATUS.OK)
     .json(
       new ApiResponse(
         HTTP_STATUS.OK,
-        null,
+        updated.representative,
         'Representative details saved successfully.'
       )
     );
@@ -101,14 +101,14 @@ export const saveDocuments = asyncHandler(async (req, res) => {
     );
   }
 
-  await collegeService.saveDocuments(req.user.id, req.files);
+  const updated = await collegeService.saveDocuments(req.user.id, req.files);
 
   res
     .status(HTTP_STATUS.OK)
     .json(
       new ApiResponse(
         HTTP_STATUS.OK,
-        null,
+        updated.documents,
         'Documents uploaded successfully.'
       )
     );
@@ -120,14 +120,14 @@ export const saveDocuments = asyncHandler(async (req, res) => {
  */
 export const saveAcademicInfo = asyncHandler(async (req, res) => {
   const data = academicInfoSchema.parse(req.body);
-  await collegeService.saveAcademicInfo(req.user.id, data);
+  const updated = await collegeService.saveAcademicInfo(req.user.id, data);
 
   res
     .status(HTTP_STATUS.OK)
     .json(
       new ApiResponse(
         HTTP_STATUS.OK,
-        null,
+        updated.academicInfo,
         'Academic information saved successfully.'
       )
     );
@@ -139,14 +139,14 @@ export const saveAcademicInfo = asyncHandler(async (req, res) => {
  */
 export const savePlatformPreferences = asyncHandler(async (req, res) => {
   const data = platformPreferencesSchema.parse(req.body);
-  await collegeService.savePlatformPreferences(req.user.id, data);
+  const updated = await collegeService.savePlatformPreferences(req.user.id, data);
 
   res
     .status(HTTP_STATUS.OK)
     .json(
       new ApiResponse(
         HTTP_STATUS.OK,
-        null,
+        updated.platformPreferences,
         'Platform preferences saved successfully.'
       )
     );
@@ -159,7 +159,7 @@ export const savePlatformPreferences = asyncHandler(async (req, res) => {
 export const saveVerification = asyncHandler(async (req, res) => {
   // TODO: Implement actual OTP send/verify logic
   // For now, mark as verified directly
-  await collegeService.saveVerification(req.user.id, {
+  const updated = await collegeService.saveVerification(req.user.id, {
     emailVerified: true,
     mobileVerified: true,
   });
@@ -169,7 +169,7 @@ export const saveVerification = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(
         HTTP_STATUS.OK,
-        null,
+        updated.verification,
         'Verification completed successfully.'
       )
     );
@@ -181,14 +181,18 @@ export const saveVerification = asyncHandler(async (req, res) => {
  */
 export const acceptTerms = asyncHandler(async (req, res) => {
   const data = termsSchema.parse(req.body);
-  await collegeService.acceptTerms(req.user.id, data);
+  const updated = await collegeService.acceptTerms(req.user.id, data);
 
   res
     .status(HTTP_STATUS.OK)
     .json(
       new ApiResponse(
         HTTP_STATUS.OK,
-        null,
+        {
+          status: updated.status,
+          onboardingCompleted: updated.onboardingCompleted,
+          termsAccepted: updated.termsAccepted,
+        },
         'Terms accepted. Your college registration is now under review.'
       )
     );
