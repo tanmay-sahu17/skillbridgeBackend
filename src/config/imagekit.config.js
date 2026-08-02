@@ -1,5 +1,6 @@
 import ImageKit from '@imagekit/nodejs';
-import fs from 'fs/promises';
+import fs from 'fs';
+import fsPromises from 'fs/promises';
 import { ApiError } from '../core/ApiError.js';
 import { HTTP_STATUS } from '../constants/index.js';
 
@@ -11,29 +12,25 @@ const imagekit = new ImageKit({
 
 /**
  * Upload file to ImageKit with organized folder structure
- *
- * Example paths:
- *   skillbridge/college/abc123/logos
- *   skillbridge/student/xyz456/resume
  */
 export const uploadToImageKit = async (filePath, role, userId, category, fileName) => {
   try {
-    const fileBuffer = await fs.readFile(filePath);
+    const fileStream = fs.createReadStream(filePath);
 
-    const result = await imagekit.upload({
-      file: fileBuffer, // required
+    const result = await imagekit.files.upload({
+      file: fileStream, // required
       fileName: fileName || `upload_${Date.now()}`, // required
       folder: `skillbridge/${role}/${userId}/${category}`,
       useUniqueFileName: true,
     });
 
     // Delete local temp file after successful upload
-    await fs.unlink(filePath);
+    await fsPromises.unlink(filePath);
     
     return result.url;
   } catch (error) {
     // Clean up temp file on error too
-    await fs.unlink(filePath).catch(() => {});
+    await fsPromises.unlink(filePath).catch(() => {});
     console.error('ImageKit Upload Error:', error);
     throw new ApiError(
       HTTP_STATUS.INTERNAL_SERVER_ERROR,
