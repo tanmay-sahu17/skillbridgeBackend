@@ -31,10 +31,6 @@ router.post(
 );
 
 router.post('/onboarding/academic-info', collegeController.saveAcademicInfo);
-router.post(
-  '/onboarding/platform-preferences',
-  collegeController.savePlatformPreferences
-);
 router.post('/onboarding/verification', collegeController.saveVerification);
 router.post('/onboarding/terms', collegeController.acceptTerms);
 

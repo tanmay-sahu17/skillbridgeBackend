@@ -29,8 +29,8 @@ const updateSectionAndProgress = async (
     completedSections.push(sectionNumber);
   }
 
-  // Calculate next step (highest completed + 1, max 9)
-  const nextStep = Math.min(Math.max(...completedSections) + 1, 9);
+  // Calculate next step (highest completed + 1, max 8)
+  const nextStep = Math.min(Math.max(...completedSections) + 1, 8);
 
   const updated = await prisma.college.update({
     where: { userId },
@@ -263,20 +263,7 @@ export const saveAcademicInfo = async (userId, data) => {
 };
 
 // ═══════════════════════════════════════════
-// Section 7: Platform Preferences
-// ═══════════════════════════════════════════
-
-export const savePlatformPreferences = async (userId, data) => {
-  return updateSectionAndProgress(
-    userId,
-    ONBOARDING_SECTIONS.PLATFORM_PREFERENCES,
-    'platformPreferences',
-    data
-  );
-};
-
-// ═══════════════════════════════════════════
-// Section 8: Verification (OTP logic placeholder)
+// Section 7: Verification (OTP logic placeholder)
 // ═══════════════════════════════════════════
 
 export const saveVerification = async (userId, data) => {
@@ -289,7 +276,7 @@ export const saveVerification = async (userId, data) => {
 };
 
 // ═══════════════════════════════════════════
-// Section 9: Terms & Declaration
+// Section 8: Terms & Declaration
 // ═══════════════════════════════════════════
 
 export const acceptTerms = async (userId, data) => {
@@ -299,8 +286,8 @@ export const acceptTerms = async (userId, data) => {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, 'College record not found.');
   }
 
-  // Ensure all 8 sections are completed before accepting terms
-  const requiredSections = [1, 2, 3, 4, 5, 6, 7, 8];
+  // Ensure all 7 sections are completed before accepting terms
+  const requiredSections = [1, 2, 3, 4, 5, 6, 7];
   const completedSections = college.completedSections || [];
   const missingSections = requiredSections.filter(
     (s) => !completedSections.includes(s)
@@ -313,9 +300,9 @@ export const acceptTerms = async (userId, data) => {
     );
   }
 
-  // Mark section 9 as completed
-  if (!completedSections.includes(9)) {
-    completedSections.push(9);
+  // Mark section 8 as completed
+  if (!completedSections.includes(8)) {
+    completedSections.push(8);
   }
 
   return prisma.college.update({
@@ -324,8 +311,8 @@ export const acceptTerms = async (userId, data) => {
       termsAccepted: data.termsAccepted,
       authorizedConfirmed: data.authorizedConfirmed,
       accuracyConfirmed: data.accuracyConfirmed,
-      completedSections,
-      currentStep: 9,
+      completedSections: { set: completedSections },
+      currentStep: 8,
       onboardingCompleted: true,
       status: 'UNDER_REVIEW',
     },
@@ -360,7 +347,6 @@ export const getOnboardingProgress = async (userId) => {
       representative: !!college.representative,
       documents: !!college.documents,
       academicInfo: !!college.academicInfo,
-      platformPreferences: !!college.platformPreferences,
       verification: !!college.verification,
       terms: college.termsAccepted,
     },

@@ -22,3 +22,14 @@ export const loginSchema = z.object({
     .string({ required_error: 'Password is required' })
     .min(1, 'Password is required'),
 });
+
+export const verifyEmailSchema = z.object({
+  email: emailSchema,
+  otp: z
+    .string({ required_error: 'OTP is required' })
+    .length(6, 'OTP must be exactly 6 digits'),
+});
+
+export const resendOtpSchema = z.object({
+  email: emailSchema,
+});

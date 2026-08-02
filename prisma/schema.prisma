@@ -51,14 +51,21 @@ enum CollegeStatus {
 
 // ==================== COMPOSITE TYPES (Embedded Documents) ====================
 
+type OtherLink {
+  type String
+  url  String
+}
+
 type SocialLinks {
-  linkedin  String?
-  facebook  String?
-  instagram String?
+  linkedin   String?
+  facebook   String?
+  instagram  String?
+  otherLinks OtherLink[]
 }
 
 type CollegeBasicInfo {
   collegeName          String
+  domain               String?
   shortName            String?
   collegeType          CollegeType
   establishmentYear    Int
@@ -104,17 +111,12 @@ type CollegeDocumentInfo {
 
 type CollegeAcademicInfo {
   totalDepartments Int
+  departments      String[]
   totalCourses     Int
+  courses          String[]
   totalStudents    Int
   totalFaculty     Int
   campusType       CampusType
-}
-
-type CollegePlatformPreferences {
-  allowStudentSelfRegistration Boolean
-  studentApprovalRequired      Boolean
-  allowAlumniRegistration      Boolean
-  allowCompanyCollaborations   Boolean
 }
 
 type CollegeVerification {
@@ -127,11 +129,12 @@ type CollegeVerification {
 model User {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   name      String
-  email     String   @unique
-  password  String
-  role      Role
-  isActive  Boolean  @default(true)
-  college   College?
+  email            String   @unique
+  password         String
+  role             Role
+  isActive         Boolean  @default(true)
+  isEmailVerified  Boolean  @default(false)
+  college          College?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -148,7 +151,6 @@ model College {
   representative      CollegeRepresentative?
   documents           CollegeDocumentInfo?
   academicInfo        CollegeAcademicInfo?
-  platformPreferences CollegePlatformPreferences?
   verification        CollegeVerification?
 
   // Onboarding tracking
@@ -166,4 +168,14 @@ model College {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Otp {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  email     String
+  otp       String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
 }

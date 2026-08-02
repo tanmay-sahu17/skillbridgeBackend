@@ -9,7 +9,6 @@ import {
   addressSchema,
   representativeSchema,
   academicInfoSchema,
-  platformPreferencesSchema,
   termsSchema,
 } from './college.validation.js';
 
@@ -133,29 +132,7 @@ export const saveAcademicInfo = asyncHandler(async (req, res) => {
     );
 });
 
-/**
- * POST /api/v1/college/onboarding/platform-preferences
- * Section 7: Platform Preferences
- */
-export const savePlatformPreferences = asyncHandler(async (req, res) => {
-  const data = platformPreferencesSchema.parse(req.body);
-  const updated = await collegeService.savePlatformPreferences(req.user.id, data);
-
-  res
-    .status(HTTP_STATUS.OK)
-    .json(
-      new ApiResponse(
-        HTTP_STATUS.OK,
-        updated.platformPreferences,
-        'Platform preferences saved successfully.'
-      )
-    );
-});
-
-/**
- * POST /api/v1/college/onboarding/verification
- * Section 8: Email & Mobile Verification (OTP placeholder)
- */
+// ── Section 7: Verification ──
 export const saveVerification = asyncHandler(async (req, res) => {
   // TODO: Implement actual OTP send/verify logic
   // For now, mark as verified directly
@@ -177,7 +154,7 @@ export const saveVerification = asyncHandler(async (req, res) => {
 
 /**
  * POST /api/v1/college/onboarding/terms
- * Section 9: Terms & Declaration
+ * Section 8: Terms & Declaration
  */
 export const acceptTerms = asyncHandler(async (req, res) => {
   const data = termsSchema.parse(req.body);

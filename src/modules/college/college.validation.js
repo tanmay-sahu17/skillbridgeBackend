@@ -17,6 +17,7 @@ export const basicInfoSchema = z.object({
     .min(2, 'College name must be at least 2 characters')
     .max(200)
     .trim(),
+  domain: z.string().trim().optional(),
   shortName: z.string().max(20).trim().optional(),
   collegeType: z.enum(['GOVERNMENT', 'PRIVATE', 'AUTONOMOUS', 'DEEMED'], {
     required_error: 'College type is required',
@@ -43,6 +44,14 @@ export const contactInfoSchema = z.object({
       linkedin: optionalUrlSchema,
       facebook: optionalUrlSchema,
       instagram: optionalUrlSchema,
+      otherLinks: z
+        .array(
+          z.object({
+            type: z.string().min(1, 'Type is required'),
+            url: urlSchema,
+          })
+        )
+        .optional(),
     })
     .optional(),
 });
@@ -85,10 +94,12 @@ export const academicInfoSchema = z.object({
     .number({ required_error: 'Total departments is required' })
     .int()
     .min(1),
+  departments: z.array(z.string()).min(1, 'At least one department is required'),
   totalCourses: z
     .number({ required_error: 'Total courses is required' })
     .int()
     .min(1),
+  courses: z.array(z.string()).min(1, 'At least one course is required'),
   totalStudents: z
     .number({ required_error: 'Total students is required' })
     .int()
@@ -102,23 +113,7 @@ export const academicInfoSchema = z.object({
   }),
 });
 
-// ── Section 7: Platform Preferences ──
-export const platformPreferencesSchema = z.object({
-  allowStudentSelfRegistration: z.boolean({
-    required_error: 'This field is required',
-  }),
-  studentApprovalRequired: z.boolean({
-    required_error: 'This field is required',
-  }),
-  allowAlumniRegistration: z.boolean({
-    required_error: 'This field is required',
-  }),
-  allowCompanyCollaborations: z.boolean({
-    required_error: 'This field is required',
-  }),
-});
-
-// ── Section 9: Terms & Declaration ──
+// ── Section 8: Terms & Declaration ──
 export const termsSchema = z.object({
   termsAccepted: z.literal(true, {
     errorMap: () => ({
