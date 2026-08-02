@@ -35,8 +35,8 @@ const updateSectionAndProgress = async (
   const updated = await prisma.college.update({
     where: { userId },
     data: {
-      [sectionField]: data,
-      completedSections,
+      [sectionField]: { set: data },
+      completedSections: { set: completedSections },
       currentStep: nextStep,
     },
   });
@@ -48,10 +48,20 @@ const updateSectionAndProgress = async (
 // Helper: Upload file to Cloudinary
 // ═══════════════════════════════════════════
 
-const uploadToCloudinary = async (filePath, folder) => {
+/**
+ * Upload file to Cloudinary with organized folder structure:
+ * skillbridge/{role}/{userId}/{category}
+ *
+ * Example paths:
+ *   skillbridge/college/abc123/logos
+ *   skillbridge/college/abc123/certificates
+ *   skillbridge/student/xyz456/resume
+ *   skillbridge/recruiter/xyz789/profile
+ */
+const uploadToCloudinary = async (filePath, role, userId, category) => {
   try {
     const result = await cloudinary.uploader.upload(filePath, {
-      folder: `skillbridge/${folder}`,
+      folder: `skillbridge/${role}/${userId}/${category}`,
       resource_type: 'auto',
     });
     // Delete local temp file after successful upload
@@ -157,19 +167,19 @@ export const saveDocuments = async (userId, files) => {
   if (files.collegeLogo?.[0]) {
     documentData.collegeLogo = await uploadToCloudinary(
       files.collegeLogo[0].path,
-      'logos'
+      'college', userId, 'logos'
     );
   }
   if (files.affiliationCert?.[0]) {
     documentData.affiliationCert = await uploadToCloudinary(
       files.affiliationCert[0].path,
-      'certificates'
+      'college', userId, 'certificates'
     );
   }
   if (files.authorizationLetter?.[0]) {
     documentData.authorizationLetter = await uploadToCloudinary(
       files.authorizationLetter[0].path,
-      'certificates'
+      'college', userId, 'certificates'
     );
   }
 
@@ -194,25 +204,25 @@ export const saveDocuments = async (userId, files) => {
   if (files.naacCertificate?.[0]) {
     documentData.naacCertificate = await uploadToCloudinary(
       files.naacCertificate[0].path,
-      'certificates'
+      'college', userId, 'certificates'
     );
   }
   if (files.nirfCertificate?.[0]) {
     documentData.nirfCertificate = await uploadToCloudinary(
       files.nirfCertificate[0].path,
-      'certificates'
+      'college', userId, 'certificates'
     );
   }
   if (files.collegeBrochure?.[0]) {
     documentData.collegeBrochure = await uploadToCloudinary(
       files.collegeBrochure[0].path,
-      'brochures'
+      'college', userId, 'brochures'
     );
   }
   if (files.gstCertificate?.[0]) {
     documentData.gstCertificate = await uploadToCloudinary(
       files.gstCertificate[0].path,
-      'certificates'
+      'college', userId, 'certificates'
     );
   }
 
@@ -220,7 +230,7 @@ export const saveDocuments = async (userId, files) => {
   if (files.otherCertificates?.length > 0) {
     documentData.otherCertificates = [];
     for (const file of files.otherCertificates) {
-      const url = await uploadToCloudinary(file.path, 'certificates');
+      const url = await uploadToCloudinary(file.path, 'college', userId, 'certificates');
       documentData.otherCertificates.push(url);
     }
   }
