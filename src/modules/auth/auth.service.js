@@ -10,7 +10,35 @@ import { getOtpTemplate } from '../../utils/emailTemplates.js';
  * Register a new user
  * If role is COLLEGE, also creates an empty College record for onboarding
  */
-export const registerUser = async ({ name, email, password, role }) => {
+export const registerUser = async ({ name, email, password, role, collegeId }) => {
+  // Common validation for STUDENT role
+  let college = null;
+  if (role === 'STUDENT') {
+    if (!collegeId) {
+      throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'collegeId is required for student registration.');
+    }
+    
+    college = await prisma.college.findUnique({
+      where: { id: collegeId },
+    });
+    
+    if (!college) {
+      throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Selected college not found.');
+    }
+    
+    if (college.status !== 'APPROVED') {
+      throw new ApiError(HTTP_STATUS.FORBIDDEN, 'Selected college is not yet approved.');
+    }
+    
+    const domain = college.basicInfo?.domain;
+    if (!domain) {
+      throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Selected college does not have a registered domain for student signups.');
+    }
+    
+    if (!email.endsWith(`@${domain}`)) {
+      throw new ApiError(HTTP_STATUS.BAD_REQUEST, `Please use your official college email ending with @${domain}`);
+    }
+  }
   // Check if user already exists
   const existingUser = await prisma.user.findUnique({ where: { email } });
   if (existingUser) {
@@ -41,18 +69,30 @@ export const registerUser = async ({ name, email, password, role }) => {
     },
   });
 
-  // If role is COLLEGE, create empty college record for onboarding
+  // Role specific records
   let onboarding = null;
   if (role === 'COLLEGE') {
-    const college = await prisma.college.create({
+    const newCollege = await prisma.college.create({
       data: {
         userId: user.id,
       },
     });
     onboarding = {
-      onboardingCompleted: college.onboardingCompleted,
-      currentStep: college.currentStep,
-      completedSections: college.completedSections,
+      onboardingCompleted: newCollege.onboardingCompleted,
+      currentStep: newCollege.currentStep,
+      completedSections: newCollege.completedSections,
+    };
+  } else if (role === 'STUDENT') {
+    const newStudent = await prisma.student.create({
+      data: {
+        userId: user.id,
+        collegeId,
+      },
+    });
+    onboarding = {
+      onboardingCompleted: newStudent.onboardingCompleted,
+      currentStep: newStudent.currentStep,
+      completedSections: newStudent.completedSections,
     };
   }
 

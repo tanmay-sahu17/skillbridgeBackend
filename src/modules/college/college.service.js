@@ -373,3 +373,24 @@ export const getCollegeData = async (userId) => {
 
   return college;
 };
+
+// ═══════════════════════════════════════════
+// Get College List (Public)
+// ═══════════════════════════════════════════
+
+export const getCollegeList = async () => {
+  const colleges = await prisma.college.findMany({
+    where: { status: 'APPROVED' },
+    select: {
+      id: true,
+      basicInfo: true,
+    },
+  });
+
+  return colleges.map(c => ({
+    id: c.id,
+    collegeName: c.basicInfo?.collegeName,
+    shortName: c.basicInfo?.shortName,
+    domain: c.basicInfo?.domain,
+  }));
+};

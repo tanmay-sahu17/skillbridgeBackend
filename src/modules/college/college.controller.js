@@ -210,3 +210,21 @@ export const getCollegeData = asyncHandler(async (req, res) => {
       )
     );
 });
+
+/**
+ * GET /api/v1/college/list
+ * Get list of approved colleges for student signup (Public)
+ */
+export const getCollegeList = asyncHandler(async (req, res) => {
+  const colleges = await collegeService.getCollegeList();
+
+  res
+    .status(HTTP_STATUS.OK)
+    .json(
+      new ApiResponse(
+        HTTP_STATUS.OK,
+        colleges,
+        'College list retrieved successfully.'
+      )
+    );
+});

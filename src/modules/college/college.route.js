@@ -5,7 +5,10 @@ import upload from '../../config/multer.config.js';
 
 const router = Router();
 
-// All college routes are protected and require COLLEGE role
+// Public Routes
+router.get('/list', collegeController.getCollegeList);
+
+// All other college routes are protected and require COLLEGE role
 router.use(protect, authorize('COLLEGE'));
 
 // ── Section-wise Onboarding Routes ──

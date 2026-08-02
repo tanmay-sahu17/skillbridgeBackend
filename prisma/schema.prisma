@@ -49,6 +49,33 @@ enum CollegeStatus {
   REJECTED
 }
 
+enum StudentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum CareerInterest {
+  INTERNSHIP
+  FULL_TIME
+  FREELANCING
+  STARTUP
+  RESEARCH
+  HIGHER_STUDIES
+}
+
+enum PlatformRole {
+  FREELANCER
+  OPPORTUNITY_PROVIDER
+  BOTH
+}
+
 // ==================== COMPOSITE TYPES (Embedded Documents) ====================
 
 type OtherLink {
@@ -124,6 +151,65 @@ type CollegeVerification {
   mobileVerified Boolean
 }
 
+type StudentBasicInfo {
+  firstName    String
+  middleName   String?
+  lastName     String
+  profilePhoto String?
+  gender       Gender?
+  dateOfBirth  DateTime?
+}
+
+type StudentContactInfo {
+  personalEmail   String
+  mobileNumber    String
+  alternateMobile String?
+}
+
+type StudentAcademicInfo {
+  enrollmentNo    String
+  studentIdNo     String?
+  course          String
+  branch          String
+  currentYear     Int
+  currentSemester Int
+  section         String?
+  batch           String
+}
+
+type StudentCareerProfile {
+  headline       String?
+  skills         String[]
+  careerInterest CareerInterest[]
+  languagesKnown String[]
+  bio            String?
+}
+
+type StudentPortfolio {
+  resumeUrl          String?
+  linkedin           String?
+  github             String?
+  portfolioWebsite   String?
+  leetcode           String?
+  hackerrank         String?
+  codechef           String?
+  codeforces         String?
+  behanceOrDribbble  String?
+  otherLinks         OtherLink[]
+}
+
+type StudentDocuments {
+  studentIdCardFront String
+  studentIdCardBack  String?
+  bonafideCert       String?
+  feeReceipt         String?
+}
+
+type StudentVerification {
+  emailVerified  Boolean
+  mobileVerified Boolean
+}
+
 // ==================== MODELS ====================
 
 model User {
@@ -135,6 +221,7 @@ model User {
   isActive         Boolean  @default(true)
   isEmailVerified  Boolean  @default(false)
   college          College?
+  student          Student?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -143,6 +230,7 @@ model College {
   id     String @id @default(auto()) @map("_id") @db.ObjectId
   userId String @unique @db.ObjectId
   user   User   @relation(fields: [userId], references: [id])
+  students Student[]
 
   // Section-wise embedded data
   basicInfo           CollegeBasicInfo?
@@ -178,4 +266,42 @@ model Otp {
   createdAt DateTime @default(now())
 
   @@index([email])
+}
+
+model Student {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  
+  userId String @unique @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id])
+  
+  collegeId String @db.ObjectId
+  college   College @relation(fields: [collegeId], references: [id])
+
+  // Onboarding Sections
+  basicInfo           StudentBasicInfo?
+  contactInfo         StudentContactInfo?
+  academicInfo        StudentAcademicInfo?
+  careerProfile       StudentCareerProfile?
+  portfolio           StudentPortfolio?
+  documents           StudentDocuments?
+  platformRole        PlatformRole?
+  verification        StudentVerification?
+
+  // Section 9: Declaration
+  infoCorrectConfirmed  Boolean @default(false)
+  collegeVerifyAccepted Boolean @default(false)
+  termsAccepted         Boolean @default(false)
+
+  // Onboarding tracking
+  currentStep         Int     @default(1)
+  completedSections   Int[]   @default([])
+  onboardingCompleted Boolean @default(false)
+
+  // Admin / College review
+  status StudentStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([collegeId])
 }
