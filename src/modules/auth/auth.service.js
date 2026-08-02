@@ -231,7 +231,7 @@ export const loginUser = async ({ email, password }) => {
     role: user.role,
   });
 
-  // For COLLEGE role, fetch onboarding status
+  // For COLLEGE and STUDENT roles, fetch onboarding status
   let onboarding = null;
   if (user.role === 'COLLEGE') {
     const college = await prisma.college.findUnique({
@@ -249,6 +249,24 @@ export const loginUser = async ({ email, password }) => {
         currentStep: college.currentStep,
         completedSections: college.completedSections,
         status: college.status,
+      };
+    }
+  } else if (user.role === 'STUDENT') {
+    const student = await prisma.student.findUnique({
+      where: { userId: user.id },
+      select: {
+        onboardingCompleted: true,
+        currentStep: true,
+        completedSections: true,
+        status: true,
+      },
+    });
+    if (student) {
+      onboarding = {
+        onboardingCompleted: student.onboardingCompleted,
+        currentStep: student.currentStep,
+        completedSections: student.completedSections,
+        status: student.status,
       };
     }
   }
@@ -280,7 +298,7 @@ export const getUserProfile = async (userId) => {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, 'User not found.');
   }
 
-  // For COLLEGE role, include onboarding status
+  // For COLLEGE and STUDENT roles, include onboarding status
   let onboarding = null;
   if (user.role === 'COLLEGE') {
     const college = await prisma.college.findUnique({
@@ -298,6 +316,24 @@ export const getUserProfile = async (userId) => {
         currentStep: college.currentStep,
         completedSections: college.completedSections,
         status: college.status,
+      };
+    }
+  } else if (user.role === 'STUDENT') {
+    const student = await prisma.student.findUnique({
+      where: { userId: user.id },
+      select: {
+        onboardingCompleted: true,
+        currentStep: true,
+        completedSections: true,
+        status: true,
+      },
+    });
+    if (student) {
+      onboarding = {
+        onboardingCompleted: student.onboardingCompleted,
+        currentStep: student.currentStep,
+        completedSections: student.completedSections,
+        status: student.status,
       };
     }
   }
