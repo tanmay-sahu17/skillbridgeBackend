@@ -3,6 +3,8 @@ import prisma from '../../core/prisma.js';
 import { ApiError } from '../../core/ApiError.js';
 import { generateToken } from '../../utils/jwt.js';
 import { HTTP_STATUS } from '../../constants/index.js';
+import { sendEmail, generateOtp } from '../../utils/mailer.js';
+import { getOtpTemplate } from '../../utils/emailTemplates.js';
 
 /**
  * Register a new user
@@ -54,14 +56,102 @@ export const registerUser = async ({ name, email, password, role }) => {
     };
   }
 
-  // Generate JWT token
+  // Generate and save OTP
+  const otp = generateOtp();
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 mins expiry
+
+  await prisma.otp.create({
+    data: {
+      email: user.email,
+      otp,
+      expiresAt,
+    },
+  });
+
+  // Send OTP email asynchronously
+  const emailHtml = getOtpTemplate(otp);
+  sendEmail(user.email, 'SkillBridge - Verify your email', emailHtml).catch(
+    (err) => console.error('Failed to send OTP email:', err)
+  );
+
+  // Generate JWT token (user is not verified yet, but they can use this token for the verification endpoint)
   const token = generateToken({
     id: user.id,
     email: user.email,
     role: user.role,
   });
 
-  return { user, token, onboarding };
+  return { user, token, onboarding, message: 'Please verify your email using the OTP sent to you.' };
+};
+
+/**
+ * Verify Email using OTP
+ */
+export const verifyEmail = async ({ email, otp }) => {
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) {
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'User not found.');
+  }
+  if (user.isEmailVerified) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Email is already verified.');
+  }
+
+  // Find latest OTP for this email
+  const otpRecord = await prisma.otp.findFirst({
+    where: { email },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  if (!otpRecord) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'No OTP found. Please request a new one.');
+  }
+
+  if (otpRecord.otp !== otp) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid OTP.');
+  }
+
+  if (new Date() > otpRecord.expiresAt) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'OTP has expired. Please request a new one.');
+  }
+
+  // Update user as verified
+  await prisma.user.update({
+    where: { email },
+    data: { isEmailVerified: true },
+  });
+
+  // Delete all OTPs for this email to prevent reuse
+  await prisma.otp.deleteMany({ where: { email } });
+
+  return { success: true };
+};
+
+/**
+ * Resend OTP
+ */
+export const resendOtp = async ({ email }) => {
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) {
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'User not found.');
+  }
+  if (user.isEmailVerified) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Email is already verified.');
+  }
+
+  // Delete old OTPs
+  await prisma.otp.deleteMany({ where: { email } });
+
+  const otp = generateOtp();
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+  await prisma.otp.create({
+    data: { email, otp, expiresAt },
+  });
+
+  const emailHtml = getOtpTemplate(otp);
+  await sendEmail(user.email, 'SkillBridge - Your new OTP', emailHtml);
+
+  return { success: true };
 };
 
 /**
@@ -140,6 +230,7 @@ export const getUserProfile = async (userId) => {
       email: true,
       role: true,
       isActive: true,
+      isEmailVerified: true,
       createdAt: true,
       updatedAt: true,
     },

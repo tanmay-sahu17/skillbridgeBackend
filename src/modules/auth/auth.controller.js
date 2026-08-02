@@ -1,6 +1,6 @@
 import asyncHandler from '../../utils/asyncHandler.js';
 import { ApiResponse } from '../../core/ApiResponse.js';
-import { registerSchema, loginSchema } from './auth.validation.js';
+import { registerSchema, loginSchema, verifyEmailSchema, resendOtpSchema } from './auth.validation.js';
 import * as authService from './auth.service.js';
 import { HTTP_STATUS } from '../../constants/index.js';
 
@@ -19,6 +19,44 @@ export const register = asyncHandler(async (req, res) => {
         HTTP_STATUS.CREATED,
         result,
         'User registration completed successfully.'
+      )
+    );
+});
+
+/**
+ * POST /api/v1/auth/verify-email
+ * Verify user's email using OTP (Public)
+ */
+export const verifyEmail = asyncHandler(async (req, res) => {
+  const validatedData = verifyEmailSchema.parse(req.body);
+  await authService.verifyEmail(validatedData);
+
+  res
+    .status(HTTP_STATUS.OK)
+    .json(
+      new ApiResponse(
+        HTTP_STATUS.OK,
+        null,
+        'Email verified successfully. You can now access your account.'
+      )
+    );
+});
+
+/**
+ * POST /api/v1/auth/resend-otp
+ * Resend OTP to user's email (Public)
+ */
+export const resendOtp = asyncHandler(async (req, res) => {
+  const validatedData = resendOtpSchema.parse(req.body);
+  await authService.resendOtp(validatedData);
+
+  res
+    .status(HTTP_STATUS.OK)
+    .json(
+      new ApiResponse(
+        HTTP_STATUS.OK,
+        null,
+        'A new OTP has been sent to your email.'
       )
     );
 });
