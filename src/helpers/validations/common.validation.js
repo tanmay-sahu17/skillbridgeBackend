@@ -17,11 +17,11 @@ export const passwordSchema = z
 
 export const phoneSchema = z
   .string({ required_error: 'Phone number is required' })
-  .regex(/^[6-9]\d{9}$/, 'Please enter a valid 10-digit Indian mobile number');
+  .regex(/^(\+91[-\s]?)?[6-9]\d{9}$/, 'Please enter a valid Indian mobile number (e.g. +91XXXXXXXXXX)');
 
 export const optionalPhoneSchema = z
   .string()
-  .regex(/^[6-9]\d{9}$/, 'Please enter a valid 10-digit Indian mobile number')
+  .regex(/^(\+91[-\s]?)?[6-9]\d{9}$/, 'Please enter a valid Indian mobile number (e.g. +91XXXXXXXXXX)')
   .optional()
   .or(z.literal(''));
 
