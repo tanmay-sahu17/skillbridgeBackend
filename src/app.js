@@ -14,7 +14,10 @@ const app = express();
 
 // ── Security & Parsing Middlewares ──
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'], // Frontend dev URLs
+  credentials: true
+}));
 app.use(morgan('dev'));
 app.use(compression());
 app.use(express.json());
