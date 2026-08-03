@@ -4,7 +4,9 @@ import { HTTP_STATUS, ONBOARDING_SECTIONS } from '../../constants/index.js';
 import cloudinary from '../../config/cloudinary.config.js';
 import fs from 'fs/promises';
 import { sendOtpSMS } from '../../utils/sms.js';
-import { generateOtp } from '../../utils/mailer.js';
+import { generateOtp, sendEmail } from '../../utils/mailer.js';
+import { checkOtpRateLimit, resetOtpTracker } from '../../utils/otpTracker.js';
+import { getOtpTemplate } from '../../utils/emailTemplates.js';
 
 // ═══════════════════════════════════════════
 // Helper: Update a section and track progress
@@ -14,7 +16,8 @@ const updateSectionAndProgress = async (
   userId,
   sectionNumber,
   sectionField,
-  data
+  data,
+  isComplete = true
 ) => {
   const college = await prisma.college.findUnique({ where: { userId } });
 
@@ -27,7 +30,7 @@ const updateSectionAndProgress = async (
 
   // Track completed sections
   const completedSections = college.completedSections || [];
-  if (!completedSections.includes(sectionNumber)) {
+  if (isComplete && !completedSections.includes(sectionNumber)) {
     completedSections.push(sectionNumber);
   }
 
@@ -284,6 +287,13 @@ export const sendMobileOtp = async (userId) => {
   }
 
   const mobile = college.contactInfo.officialMobile;
+
+  if (college.verification?.mobileVerified) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Mobile number is already verified.');
+  }
+
+  // Check rate limit before sending OTP
+  await checkOtpRateLimit(mobile);
   
   // Request SMS from Twilio which auto-generates the OTP
   const message = await sendOtpSMS(mobile);
@@ -321,12 +331,85 @@ export const verifyMobileOtp = async (userId, otp) => {
 
   await prisma.otp.deleteMany({ where: { mobile } });
 
+  // Reset tracker on successful verification
+  await resetOtpTracker(mobile);
+
   // Update verification status
+  const existingVerification = college.verification || { emailVerified: false, mobileVerified: false };
+  const newVerification = { ...existingVerification, mobileVerified: true };
+  const isComplete = newVerification.emailVerified && newVerification.mobileVerified;
+
   return updateSectionAndProgress(
     userId,
     ONBOARDING_SECTIONS.VERIFICATION,
     'verification',
-    { emailVerified: true, mobileVerified: true }
+    newVerification,
+    isComplete
+  );
+};
+
+export const sendEmailOtp = async (userId) => {
+  const college = await prisma.college.findUnique({ where: { userId }, include: { user: true } });
+  if (!college || !college.contactInfo || !college.contactInfo.officialEmail) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Please save contact info with a valid official email first.');
+  }
+
+  const officialEmail = college.contactInfo.officialEmail;
+  if (college.verification?.emailVerified) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Official email is already verified.');
+  }
+
+  if (officialEmail === college.user.email) {
+    // Auto-verify if it matches the registered email
+    const existingVerification = college.verification || { emailVerified: false, mobileVerified: false };
+    const newVerification = { ...existingVerification, emailVerified: true };
+    const isComplete = newVerification.emailVerified && newVerification.mobileVerified;
+    
+    await updateSectionAndProgress(userId, ONBOARDING_SECTIONS.VERIFICATION, 'verification', newVerification, isComplete);
+    return { message: 'Official email matches signup email and has been automatically verified.', autoVerified: true };
+  }
+
+  await checkOtpRateLimit(officialEmail);
+  const otp = generateOtp();
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+  await prisma.otp.deleteMany({ where: { email: officialEmail } });
+  await prisma.otp.create({ data: { email: officialEmail, otp, expiresAt } });
+
+  const emailHtml = getOtpTemplate(otp);
+  await sendEmail(officialEmail, 'SkillBridge - Verify Official Email', emailHtml);
+  return { message: 'OTP sent successfully to ' + officialEmail, autoVerified: false };
+};
+
+export const verifyEmailOtp = async (userId, otp) => {
+  const college = await prisma.college.findUnique({ where: { userId } });
+  if (!college || !college.contactInfo || !college.contactInfo.officialEmail) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Contact info missing.');
+  }
+
+  const email = college.contactInfo.officialEmail;
+  const otpRecord = await prisma.otp.findFirst({
+    where: { email },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  if (!otpRecord) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'No OTP found. Please request a new one.');
+  if (otpRecord.otp !== otp) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid OTP.');
+  if (new Date() > otpRecord.expiresAt) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'OTP has expired.');
+
+  await prisma.otp.deleteMany({ where: { email } });
+  await resetOtpTracker(email);
+
+  const existingVerification = college.verification || { emailVerified: false, mobileVerified: false };
+  const newVerification = { ...existingVerification, emailVerified: true };
+  const isComplete = newVerification.emailVerified && newVerification.mobileVerified;
+
+  return updateSectionAndProgress(
+    userId,
+    ONBOARDING_SECTIONS.VERIFICATION,
+    'verification',
+    newVerification,
+    isComplete
   );
 };
 

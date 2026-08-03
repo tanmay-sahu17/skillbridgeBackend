@@ -164,6 +164,21 @@ export const verifyMobileOtp = asyncHandler(async (req, res) => {
   res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, updated.verification, 'Mobile verified successfully.'));
 });
 
+export const sendEmailOtp = asyncHandler(async (req, res) => {
+  const result = await collegeService.sendEmailOtp(req.user.id);
+  res.status(HTTP_STATUS.OK).json(
+    new ApiResponse(HTTP_STATUS.OK, { autoVerified: result.autoVerified }, result.message)
+  );
+});
+
+export const verifyEmailOtp = asyncHandler(async (req, res) => {
+  const { otp } = req.body;
+  if (!otp) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'OTP is required.');
+
+  const updated = await collegeService.verifyEmailOtp(req.user.id, otp);
+  res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, updated.verification, 'Official email verified successfully.'));
+});
+
 /**
  * POST /api/v1/college/onboarding/terms
  * Section 8: Terms & Declaration

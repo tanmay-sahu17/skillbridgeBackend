@@ -5,6 +5,7 @@ import { generateToken } from '../../utils/jwt.js';
 import { HTTP_STATUS } from '../../constants/index.js';
 import { sendEmail, generateOtp } from '../../utils/mailer.js';
 import { getOtpTemplate } from '../../utils/emailTemplates.js';
+import { checkOtpRateLimit, resetOtpTracker } from '../../utils/otpTracker.js';
 
 /**
  * Register a new user
@@ -96,6 +97,9 @@ export const registerUser = async ({ name, email, password, role, collegeId }) =
     };
   }
 
+  // Check rate limit before generating OTP
+  await checkOtpRateLimit(user.email);
+
   // Generate and save OTP
   const otp = generateOtp();
   const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 mins expiry
@@ -163,6 +167,9 @@ export const verifyEmail = async ({ email, otp }) => {
   // Delete all OTPs for this email to prevent reuse
   await prisma.otp.deleteMany({ where: { email } });
 
+  // Reset rate limiting tracker on successful verification
+  await resetOtpTracker(email);
+
   return { success: true };
 };
 
@@ -180,6 +187,9 @@ export const resendOtp = async ({ email }) => {
 
   // Delete old OTPs
   await prisma.otp.deleteMany({ where: { email } });
+
+  // Check rate limit (will throw if on cooldown)
+  await checkOtpRateLimit(email);
 
   const otp = generateOtp();
   const expiresAt = new Date(Date.now() + 15 * 60 * 1000);

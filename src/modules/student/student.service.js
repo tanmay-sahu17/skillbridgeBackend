@@ -4,6 +4,7 @@ import { HTTP_STATUS } from '../../constants/index.js';
 import { uploadToImageKit } from '../../config/imagekit.config.js';
 import { sendOtpSMS } from '../../utils/sms.js';
 import { generateOtp } from '../../utils/mailer.js';
+import { checkOtpRateLimit, resetOtpTracker } from '../../utils/otpTracker.js';
 
 // Section Enum for Student Onboarding (1 to 9)
 const STUDENT_SECTIONS = {
@@ -253,6 +254,13 @@ export const sendMobileOtp = async (userId) => {
   }
 
   const mobile = student.contactInfo.mobileNumber;
+
+  if (student.verification?.mobileVerified) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Mobile number is already verified.');
+  }
+
+  // Check rate limit before sending OTP
+  await checkOtpRateLimit(mobile);
   
   // Request SMS from Twilio which auto-generates the OTP
   const message = await sendOtpSMS(mobile);
@@ -289,6 +297,9 @@ export const verifyMobileOtp = async (userId, otp) => {
   if (new Date() > otpRecord.expiresAt) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'OTP has expired.');
 
   await prisma.otp.deleteMany({ where: { mobile } });
+
+  // Reset tracker on successful verification
+  await resetOtpTracker(mobile);
 
   // Update verification status
   return updateSectionAndProgress(
