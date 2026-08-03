@@ -7,13 +7,15 @@ const errorHandler = (err, req, res, next) => {
 
   let statusCode = err.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
   let message = err.message || 'Internal Server Error';
-  let errors = err.errors || [];
+  let errors = Array.isArray(err.errors) ? err.errors : [];
 
   // ── Zod Validation Error ──
   if (err instanceof ZodError) {
     statusCode = HTTP_STATUS.BAD_REQUEST;
     message = 'Validation failed.';
-    errors = err.errors.map((e) => ({
+    const zodIssues = Array.isArray(err.issues) ? err.issues : Array.isArray(err.errors) ? err.errors : [];
+
+    errors = zodIssues.map((e) => ({
       field: e.path.join('.'),
       message: e.message,
     }));
