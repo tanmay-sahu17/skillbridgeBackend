@@ -28,3 +28,15 @@ POST /api/v1/college/onboarding/verification/verify-email-otp
 }
 ```
 - **Description:** Validates the email OTP and updates the database. If the mobile OTP is also verified, Section 7 is marked as complete.
+
+## 3. Cookie-based Authentication & Logout
+Tokens are now securely sent via **httpOnly cookies** on signup and login, removing the need for manual token management on the frontend.
+
+### New API: Logout User (Public/Protected)
+```
+POST /api/v1/auth/logout
+```
+- **Headers:** Requires cookie or Bearer token for protected access (though logically works to clear cookie).
+- **Body:** `{}`
+- **Description:** Clears the `httpOnly` token cookie from the user's browser, effectively logging them out.
+- **Frontend Action:** Frontend no longer needs to manually clear `localStorage` if relying entirely on cookies, but they must use `withCredentials: true` in their HTTP clients.

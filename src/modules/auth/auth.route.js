@@ -12,5 +12,6 @@ router.post('/login', authController.login);
 
 // Protected routes
 router.get('/profile', protect, authController.getProfile);
+router.post('/logout', protect, authController.logout);
 
 export default router;

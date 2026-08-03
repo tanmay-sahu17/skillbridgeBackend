@@ -4,6 +4,13 @@ import { registerSchema, loginSchema, verifyEmailSchema, resendOtpSchema } from 
 import * as authService from './auth.service.js';
 import { HTTP_STATUS } from '../../constants/index.js';
 
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'strict',
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+};
+
 /**
  * POST /api/v1/auth/register
  * Register a new user (Public)
@@ -14,6 +21,7 @@ export const register = asyncHandler(async (req, res) => {
 
   res
     .status(HTTP_STATUS.CREATED)
+    .cookie('token', result.token, cookieOptions)
     .json(
       new ApiResponse(
         HTTP_STATUS.CREATED,
@@ -71,6 +79,7 @@ export const login = asyncHandler(async (req, res) => {
 
   res
     .status(HTTP_STATUS.OK)
+    .cookie('token', result.token, cookieOptions)
     .json(
       new ApiResponse(
         HTTP_STATUS.OK,
@@ -94,6 +103,27 @@ export const getProfile = asyncHandler(async (req, res) => {
         HTTP_STATUS.OK,
         { user },
         'User profile retrieved successfully.'
+      )
+    );
+});
+
+/**
+ * POST /api/v1/auth/logout
+ * Logout user & clear cookie (Protected)
+ */
+export const logout = asyncHandler(async (req, res) => {
+  res
+    .status(HTTP_STATUS.OK)
+    .clearCookie('token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+    })
+    .json(
+      new ApiResponse(
+        HTTP_STATUS.OK,
+        null,
+        'Logged out successfully.'
       )
     );
 });
