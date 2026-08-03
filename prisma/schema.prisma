@@ -260,12 +260,14 @@ model College {
 
 model Otp {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  email     String
+  email     String?
+  mobile    String?
   otp       String
   expiresAt DateTime
   createdAt DateTime @default(now())
 
   @@index([email])
+  @@index([mobile])
 }
 
 model Student {

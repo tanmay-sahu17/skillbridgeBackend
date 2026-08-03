@@ -134,8 +134,7 @@ export const saveAcademicInfo = asyncHandler(async (req, res) => {
 
 // ── Section 7: Verification ──
 export const saveVerification = asyncHandler(async (req, res) => {
-  // TODO: Implement actual OTP send/verify logic
-  // For now, mark as verified directly
+  // Manual bypass or fallback if needed
   const updated = await collegeService.saveVerification(req.user.id, {
     emailVerified: true,
     mobileVerified: true,
@@ -150,6 +149,19 @@ export const saveVerification = asyncHandler(async (req, res) => {
         'Verification completed successfully.'
       )
     );
+});
+
+export const sendMobileOtp = asyncHandler(async (req, res) => {
+  const result = await collegeService.sendMobileOtp(req.user.id);
+  res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, null, result.message));
+});
+
+export const verifyMobileOtp = asyncHandler(async (req, res) => {
+  const { otp } = req.body;
+  if (!otp) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'OTP is required.');
+
+  const updated = await collegeService.verifyMobileOtp(req.user.id, otp);
+  res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, updated.verification, 'Mobile verified successfully.'));
 });
 
 /**

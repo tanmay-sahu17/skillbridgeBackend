@@ -35,6 +35,8 @@ router.post(
 
 router.post('/onboarding/platform-role', studentController.savePlatformRole);
 router.post('/onboarding/verification', studentController.saveVerification);
+router.post('/onboarding/verification/send-mobile-otp', studentController.sendMobileOtp);
+router.post('/onboarding/verification/verify-mobile-otp', studentController.verifyMobileOtp);
 router.post('/onboarding/declaration', studentController.saveDeclaration);
 
 // ── Progress & Data Routes ──

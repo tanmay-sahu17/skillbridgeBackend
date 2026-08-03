@@ -35,6 +35,8 @@ router.post(
 
 router.post('/onboarding/academic-info', collegeController.saveAcademicInfo);
 router.post('/onboarding/verification', collegeController.saveVerification);
+router.post('/onboarding/verification/send-mobile-otp', collegeController.sendMobileOtp);
+router.post('/onboarding/verification/verify-mobile-otp', collegeController.verifyMobileOtp);
 router.post('/onboarding/terms', collegeController.acceptTerms);
 
 // ── Progress & Data Routes ──

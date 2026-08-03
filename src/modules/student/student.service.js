@@ -2,6 +2,8 @@ import prisma from '../../core/prisma.js';
 import { ApiError } from '../../core/ApiError.js';
 import { HTTP_STATUS } from '../../constants/index.js';
 import { uploadToImageKit } from '../../config/imagekit.config.js';
+import { sendOtpSMS } from '../../utils/sms.js';
+import { generateOtp } from '../../utils/mailer.js';
 
 // Section Enum for Student Onboarding (1 to 9)
 const STUDENT_SECTIONS = {
@@ -241,6 +243,59 @@ export const saveVerification = async (userId, data) => {
     STUDENT_SECTIONS.VERIFICATION,
     'verification',
     data
+  );
+};
+
+export const sendMobileOtp = async (userId) => {
+  const student = await prisma.student.findUnique({ where: { userId } });
+  if (!student || !student.contactInfo || !student.contactInfo.mobileNumber) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Please save contact info with a valid mobile number first.');
+  }
+
+  const mobile = student.contactInfo.mobileNumber;
+  
+  // Request SMS from Twilio which auto-generates the OTP
+  const message = await sendOtpSMS(mobile);
+  
+  // Extract OTP from Twilio response body
+  const match = message?.body?.match(/verification code is (\d+)/);
+  if (!match) {
+    throw new ApiError(HTTP_STATUS.INTERNAL_SERVER_ERROR, 'Failed to generate OTP via SMS provider.');
+  }
+  const otp = match[1];
+
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+
+  await prisma.otp.deleteMany({ where: { mobile } });
+  await prisma.otp.create({ data: { mobile, otp, expiresAt } });
+
+  return { message: 'OTP sent successfully to ' + mobile };
+};
+
+export const verifyMobileOtp = async (userId, otp) => {
+  const student = await prisma.student.findUnique({ where: { userId } });
+  if (!student || !student.contactInfo || !student.contactInfo.mobileNumber) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Contact info missing.');
+  }
+
+  const mobile = student.contactInfo.mobileNumber;
+  const otpRecord = await prisma.otp.findFirst({
+    where: { mobile },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  if (!otpRecord) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'No OTP found. Please request a new one.');
+  if (otpRecord.otp !== otp) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid OTP.');
+  if (new Date() > otpRecord.expiresAt) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'OTP has expired.');
+
+  await prisma.otp.deleteMany({ where: { mobile } });
+
+  // Update verification status
+  return updateSectionAndProgress(
+    userId,
+    STUDENT_SECTIONS.VERIFICATION,
+    'verification',
+    { emailVerified: true, mobileVerified: true }
   );
 };
 
