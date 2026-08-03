@@ -17,7 +17,8 @@ const updateSectionAndProgress = async (
   sectionNumber,
   sectionField,
   data,
-  isComplete = true
+  isComplete = true,
+  sectionsToRemove = []
 ) => {
   const college = await prisma.college.findUnique({ where: { userId } });
 
@@ -29,9 +30,14 @@ const updateSectionAndProgress = async (
   }
 
   // Track completed sections
-  const completedSections = college.completedSections || [];
+  let completedSections = college.completedSections || [];
   if (isComplete && !completedSections.includes(sectionNumber)) {
     completedSections.push(sectionNumber);
+  }
+
+  // Remove sections if requested (e.g., when resetting verification)
+  if (sectionsToRemove && sectionsToRemove.length > 0) {
+    completedSections = completedSections.filter(s => !sectionsToRemove.includes(s));
   }
 
   // Calculate next step (highest completed + 1, max 8)
@@ -100,6 +106,10 @@ export const saveBasicInfo = async (userId, data) => {
 // ═══════════════════════════════════════════
 
 export const saveContactInfo = async (userId, data) => {
+  const college = await prisma.college.findUnique({ where: { userId } });
+  if (!college) {
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'College record not found.');
+  }
   // Clean up empty optional fields
   if (data.alternateContact === '') {
     data.alternateContact = null;
@@ -118,11 +128,48 @@ export const saveContactInfo = async (userId, data) => {
     }
   }
 
+  let resetEmail = false;
+  let resetMobile = false;
+  let sectionsToRemove = [];
+
+  // Check if contact info existed and email/mobile changed
+  if (college.contactInfo) {
+    if (data.officialEmail !== college.contactInfo.officialEmail) {
+      resetEmail = true;
+    }
+    if (data.officialMobile !== college.contactInfo.officialMobile) {
+      resetMobile = true;
+    }
+  }
+
+  if (resetEmail || resetMobile) {
+    // Modify verification state
+    const existingVerification = college.verification || { emailVerified: false, mobileVerified: false };
+    const newVerification = {
+      ...existingVerification,
+      emailVerified: resetEmail ? false : existingVerification.emailVerified,
+      mobileVerified: resetMobile ? false : existingVerification.mobileVerified,
+    };
+
+    // Remove Verification Section (7) from completed
+    sectionsToRemove.push(ONBOARDING_SECTIONS.VERIFICATION);
+
+    // Save the invalidated verification state back
+    await prisma.college.update({
+      where: { userId },
+      data: {
+        verification: { set: newVerification }
+      }
+    });
+  }
+
   return updateSectionAndProgress(
     userId,
     ONBOARDING_SECTIONS.CONTACT_INFO,
     'contactInfo',
-    data
+    data,
+    true,
+    sectionsToRemove
   );
 };
 

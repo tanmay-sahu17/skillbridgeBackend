@@ -27,7 +27,8 @@ const updateSectionAndProgress = async (
   userId,
   sectionNumber,
   sectionField,
-  data
+  data,
+  sectionsToRemove = []
 ) => {
   const student = await prisma.student.findUnique({ where: { userId } });
 
@@ -39,9 +40,14 @@ const updateSectionAndProgress = async (
   }
 
   // Track completed sections
-  const completedSections = student.completedSections || [];
+  let completedSections = student.completedSections || [];
   if (!completedSections.includes(sectionNumber)) {
     completedSections.push(sectionNumber);
+  }
+
+  // Remove sections if requested
+  if (sectionsToRemove && sectionsToRemove.length > 0) {
+    completedSections = completedSections.filter(s => !sectionsToRemove.includes(s));
   }
 
   // Calculate next step (highest completed + 1, max 9)
@@ -77,14 +83,46 @@ export const saveBasicInfo = async (userId, data) => {
 // ═══════════════════════════════════════════
 
 export const saveContactInfo = async (userId, data) => {
+  const student = await prisma.student.findUnique({ where: { userId } });
+  if (!student) {
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Student record not found.');
+  }
+
   if (data.alternateMobile === '') {
     data.alternateMobile = null;
   }
+  let resetMobile = false;
+  let sectionsToRemove = [];
+
+  if (student.contactInfo) {
+    if (data.mobileNumber !== student.contactInfo.mobileNumber) {
+      resetMobile = true;
+    }
+  }
+
+  if (resetMobile) {
+    const existingVerification = student.verification || { emailVerified: true, mobileVerified: false };
+    const newVerification = {
+      ...existingVerification,
+      mobileVerified: false
+    };
+
+    sectionsToRemove.push(STUDENT_SECTIONS.VERIFICATION); // 8
+
+    await prisma.student.update({
+      where: { userId },
+      data: {
+        verification: { set: newVerification }
+      }
+    });
+  }
+
   return updateSectionAndProgress(
     userId,
     STUDENT_SECTIONS.CONTACT_INFO,
     'contactInfo',
-    data
+    data,
+    sectionsToRemove
   );
 };
 
