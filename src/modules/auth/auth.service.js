@@ -118,14 +118,12 @@ export const registerUser = async ({ name, email, password, role, collegeId }) =
     (err) => console.error('Failed to send OTP email:', err)
   );
 
-  // Generate JWT token (user is not verified yet, but they can use this token for the verification endpoint)
-  const token = generateToken({
-    id: user.id,
-    email: user.email,
-    role: user.role,
-  });
-
-  return { user, token, onboarding, message: 'Please verify your email using the OTP sent to you.' };
+  // Do NOT generate token here to ensure users verify their email first
+  return { 
+    user, 
+    onboarding, 
+    message: 'Registration successful! Please verify your email using the OTP sent to you.' 
+  };
 };
 
 /**
@@ -170,7 +168,33 @@ export const verifyEmail = async ({ email, otp }) => {
   // Reset rate limiting tracker on successful verification
   await resetOtpTracker(email);
 
-  return { success: true };
+  // Generate JWT token now that email is verified
+  const token = generateToken({
+    id: user.id,
+    email: user.email,
+    role: user.role,
+  });
+
+  // For COLLEGE and STUDENT roles, fetch onboarding status
+  let onboarding = null;
+  if (user.role === 'COLLEGE') {
+    const college = await prisma.college.findUnique({
+      where: { userId: user.id },
+      select: { onboardingCompleted: true, currentStep: true, completedSections: true, status: true },
+    });
+    if (college) onboarding = college;
+  } else if (user.role === 'STUDENT') {
+    const student = await prisma.student.findUnique({
+      where: { userId: user.id },
+      select: { onboardingCompleted: true, currentStep: true, completedSections: true, status: true },
+    });
+    if (student) onboarding = student;
+  }
+
+  // Return user without password
+  const { password: _, ...userWithoutPassword } = user;
+  
+  return { user: userWithoutPassword, token, onboarding };
 };
 
 /**
@@ -214,6 +238,14 @@ export const loginUser = async ({ email, password }) => {
     throw new ApiError(
       HTTP_STATUS.UNAUTHORIZED,
       'Invalid email or password.'
+    );
+  }
+
+  // Check if email is verified
+  if (!user.isEmailVerified) {
+    throw new ApiError(
+      HTTP_STATUS.FORBIDDEN,
+      'Please verify your email before logging in.'
     );
   }
 

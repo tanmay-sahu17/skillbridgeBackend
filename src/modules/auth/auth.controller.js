@@ -21,7 +21,6 @@ export const register = asyncHandler(async (req, res) => {
 
   res
     .status(HTTP_STATUS.CREATED)
-    .cookie('token', result.token, cookieOptions)
     .json(
       new ApiResponse(
         HTTP_STATUS.CREATED,
@@ -37,15 +36,16 @@ export const register = asyncHandler(async (req, res) => {
  */
 export const verifyEmail = asyncHandler(async (req, res) => {
   const validatedData = verifyEmailSchema.parse(req.body);
-  await authService.verifyEmail(validatedData);
+  const result = await authService.verifyEmail(validatedData);
 
   res
     .status(HTTP_STATUS.OK)
+    .cookie('token', result.token, cookieOptions)
     .json(
       new ApiResponse(
         HTTP_STATUS.OK,
-        null,
-        'Email verified successfully. You can now access your account.'
+        result,
+        'Email verified successfully. You are now logged in.'
       )
     );
 });
