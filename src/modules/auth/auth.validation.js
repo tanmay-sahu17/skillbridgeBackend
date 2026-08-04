@@ -34,3 +34,13 @@ export const verifyEmailSchema = z.object({
 export const resendOtpSchema = z.object({
   email: emailSchema,
 });
+
+export const forgotPasswordSchema = z.object({
+  email: emailSchema,
+});
+
+export const resetPasswordSchema = z.object({
+  userId: z.string({ required_error: 'User ID is required' }),
+  token: z.string({ required_error: 'Token is required' }),
+  newPassword: passwordSchema,
+});

@@ -1,6 +1,6 @@
 import asyncHandler from '../../utils/asyncHandler.js';
 import { ApiResponse } from '../../core/ApiResponse.js';
-import { registerSchema, loginSchema, verifyEmailSchema, resendOtpSchema } from './auth.validation.js';
+import { registerSchema, loginSchema, verifyEmailSchema, resendOtpSchema, forgotPasswordSchema, resetPasswordSchema } from './auth.validation.js';
 import * as authService from './auth.service.js';
 import { HTTP_STATUS } from '../../constants/index.js';
 
@@ -94,14 +94,15 @@ export const login = asyncHandler(async (req, res) => {
  * Get logged-in user profile (Protected)
  */
 export const getProfile = asyncHandler(async (req, res) => {
-  const user = await authService.getUserProfile(req.user.id);
+  const profileData = await authService.getUserProfile(req.user.id);
+  const { onboarding, ...user } = profileData;
 
   res
     .status(HTTP_STATUS.OK)
     .json(
       new ApiResponse(
         HTTP_STATUS.OK,
-        { user },
+        { user, onboarding },
         'User profile retrieved successfully.'
       )
     );
@@ -124,6 +125,44 @@ export const logout = asyncHandler(async (req, res) => {
         HTTP_STATUS.OK,
         null,
         'Logged out successfully.'
+      )
+    );
+});
+
+/**
+ * POST /api/v1/auth/forgot-password
+ * Send password reset link to user's email
+ */
+export const forgotPassword = asyncHandler(async (req, res) => {
+  const validatedData = forgotPasswordSchema.parse(req.body);
+  await authService.forgotPassword(validatedData);
+
+  res
+    .status(HTTP_STATUS.OK)
+    .json(
+      new ApiResponse(
+        HTTP_STATUS.OK,
+        null,
+        'Password reset link has been sent to your email.'
+      )
+    );
+});
+
+/**
+ * POST /api/v1/auth/reset-password
+ * Verify reset token and update password
+ */
+export const resetPassword = asyncHandler(async (req, res) => {
+  const validatedData = resetPasswordSchema.parse(req.body);
+  await authService.resetPassword(validatedData);
+
+  res
+    .status(HTTP_STATUS.OK)
+    .json(
+      new ApiResponse(
+        HTTP_STATUS.OK,
+        null,
+        'Password has been reset successfully.'
       )
     );
 });

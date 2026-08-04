@@ -3,8 +3,6 @@ import { ZodError } from 'zod';
 import { HTTP_STATUS } from '../constants/index.js';
 
 const errorHandler = (err, req, res, next) => {
-  console.error(err.stack || err.message);
-
   let statusCode = err.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
   let message = err.message || 'Internal Server Error';
   let errors = Array.isArray(err.errors) ? err.errors : [];
@@ -43,6 +41,11 @@ const errorHandler = (err, req, res, next) => {
   if (err.code === 'LIMIT_FILE_SIZE') {
     statusCode = HTTP_STATUS.BAD_REQUEST;
     message = 'File size exceeds the allowed limit (10MB).';
+  }
+
+  // Print stack trace for 500s, but only the message for 4xx to avoid terminal spam
+  if (statusCode >= 500) {
+    console.error(err.stack || err.message);
   }
 
   res.status(statusCode).json({

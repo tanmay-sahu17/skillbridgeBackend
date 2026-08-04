@@ -4,7 +4,9 @@ import { ApiError } from '../../core/ApiError.js';
 import { generateToken } from '../../utils/jwt.js';
 import { HTTP_STATUS } from '../../constants/index.js';
 import { sendEmail, generateOtp } from '../../utils/mailer.js';
-import { getOtpTemplate } from '../../utils/emailTemplates.js';
+import jwt from 'jsonwebtoken';
+import appConfig from '../../config/app.config.js';
+import { getOtpTemplate, getResetPasswordTemplate } from '../../utils/emailTemplates.js';
 import { checkOtpRateLimit, resetOtpTracker } from '../../utils/otpTracker.js';
 
 /**
@@ -381,4 +383,49 @@ export const getUserProfile = async (userId) => {
   }
 
   return { ...user, onboarding };
+};
+
+/**
+ * Forgot Password - Send reset link to email
+ */
+export const forgotPassword = async ({ email }) => {
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) {
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'User with this email does not exist.');
+  }
+
+  const secret = appConfig.jwt.secret + user.password;
+  const token = jwt.sign({ id: user.id, email: user.email, purpose: 'RESET_PASSWORD' }, secret, {
+    expiresIn: '15m',
+  });
+
+  const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?id=${user.id}&token=${token}`;
+  
+  await sendEmail(email, 'SkillBridge - Reset Your Password', getResetPasswordTemplate(resetLink));
+};
+
+/**
+ * Reset Password - Verify token and update password
+ */
+export const resetPassword = async ({ userId, token, newPassword }) => {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid password reset link.');
+  }
+
+  const secret = appConfig.jwt.secret + user.password;
+  try {
+    const payload = jwt.verify(token, secret);
+    if (payload.purpose !== 'RESET_PASSWORD') {
+      throw new Error('Invalid token purpose');
+    }
+  } catch (error) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid or expired password reset link.');
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  await prisma.user.update({
+    where: { id: userId },
+    data: { password: hashedPassword },
+  });
 };
