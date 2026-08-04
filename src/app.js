@@ -10,6 +10,7 @@ import authRoutes from './modules/auth/auth.route.js';
 import collegeRoutes from './modules/college/college.route.js';
 import studentRoutes from './modules/student/student.route.js';
 import searchRoutes from './modules/search/search.route.js';
+import adminRoutes from './modules/admin/admin.route.js';
 
 const app = express();
 
@@ -42,6 +43,7 @@ app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/college', collegeRoutes);
 app.use('/api/v1/student', studentRoutes);
 app.use('/api/v1/search', searchRoutes);
+app.use('/api/v1/admin', adminRoutes);
 
 // ── 404 Handler ──
 app.use((req, res) => {

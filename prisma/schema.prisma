@@ -18,6 +18,14 @@ enum Role {
   RECRUITER
   TPO
   ADMIN
+  COLLEGE_STAFF
+}
+
+enum CrudAction {
+  CREATE
+  READ
+  UPDATE
+  DELETE
 }
 
 enum CollegeType {
@@ -222,6 +230,14 @@ model User {
   isEmailVerified  Boolean  @default(false)
   college          College?
   student          Student?
+
+  // RBAC Relations
+  customRoleId     String?  @db.ObjectId
+  customRole       CustomRole? @relation(fields: [customRoleId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  collegeStaffId   String?  @db.ObjectId
+  employerCollege  College? @relation("CollegeStaff", fields: [collegeStaffId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userMenuPermissions UserMenuPermission[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -231,6 +247,8 @@ model College {
   userId String @unique @db.ObjectId
   user   User   @relation(fields: [userId], references: [id])
   students Student[]
+  staffUsers User[] @relation("CollegeStaff")
+  customRoles CustomRole[]
 
   // Section-wise embedded data
   basicInfo           CollegeBasicInfo?
@@ -315,4 +333,69 @@ model Student {
   updatedAt DateTime @updatedAt
 
   @@index([collegeId])
+}
+
+// ==================== RBAC MODELS ====================
+
+model CustomRole {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String   // e.g., "TPO", "backend_engineer"
+  description String?
+  collegeId   String?  @db.ObjectId // If null, it's a global/base role template
+  college     College? @relation(fields: [collegeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  
+  roleMenuPermissions RoleMenuPermission[]
+  users               User[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([name, collegeId])
+}
+
+model Menu {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  path      String   @unique
+  icon      String?
+  parentId  String?  @db.ObjectId // For nested menus
+  order     Int      @default(0)
+
+  roleMenuPermissions RoleMenuPermission[]
+  userMenuPermissions UserMenuPermission[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RoleMenuPermission {
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  customRoleId String     @db.ObjectId
+  customRole   CustomRole @relation(fields: [customRoleId], references: [id], onDelete: Cascade)
+  
+  menuId       String     @db.ObjectId
+  menu         Menu       @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  
+  actions      CrudAction[] // Defines allowed actions for this role on this menu
+
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([customRoleId, menuId])
+}
+
+model UserMenuPermission {
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String     @db.ObjectId
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  menuId       String     @db.ObjectId
+  menu         Menu       @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  
+  actions      CrudAction[] // Overrides the CustomRole actions entirely for this user on this menu
+
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([userId, menuId])
 }
