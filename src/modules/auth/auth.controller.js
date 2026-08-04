@@ -3,6 +3,7 @@ import { ApiResponse } from '../../core/ApiResponse.js';
 import { registerSchema, loginSchema, verifyEmailSchema, resendOtpSchema, forgotPasswordSchema, resetPasswordSchema } from './auth.validation.js';
 import * as authService from './auth.service.js';
 import { HTTP_STATUS } from '../../constants/index.js';
+import prisma from '../../core/prisma.js';
 
 const cookieOptions = {
   httpOnly: true,
@@ -165,4 +166,74 @@ export const resetPassword = asyncHandler(async (req, res) => {
         'Password has been reset successfully.'
       )
     );
+});
+
+/**
+ * GET /api/v1/auth/my-menus
+ * Fetch dynamic sidebar menus based on user's role and ABAC overrides
+ */
+export const getMyMenus = asyncHandler(async (req, res) => {
+  const user = req.user;
+
+  // Super admin gets all menus
+  if (user.role === 'ADMIN' && user.id === 'admin') {
+     const allMenus = await prisma.menu.findMany({ orderBy: { order: 'asc' } });
+     return res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, allMenus, 'Admin menus retrieved'));
+  }
+
+  // 1. Get base custom role
+  let customRoleId = user.customRoleId;
+  if (!customRoleId) {
+    const baseRole = await prisma.customRole.findFirst({
+      where: { name: user.role, collegeId: null }
+    });
+    if (baseRole) customRoleId = baseRole.id;
+  }
+
+  // 2. Fetch Role Permissions
+  let roleMenus = [];
+  if (customRoleId) {
+    const rolePermissions = await prisma.roleMenuPermission.findMany({
+      where: { customRoleId },
+      include: { menu: true }
+    });
+    // Include menus where user has at least READ access
+    roleMenus = rolePermissions.filter(p => p.actions.includes('READ')).map(p => p.menu);
+  }
+
+  // 3. Fetch User Overrides (ABAC)
+  const userPermissions = await prisma.userMenuPermission.findMany({
+    where: { userId: user.id },
+    include: { menu: true }
+  });
+
+  const userMenuMap = new Map();
+  userPermissions.forEach(p => {
+     if (p.actions.includes('READ')) {
+       userMenuMap.set(p.menu.id, p.menu);
+     } else {
+       // Explicitly denied READ access
+       userMenuMap.set(p.menu.id, null);
+     }
+  });
+
+  // 4. Merge
+  const finalMenuMap = new Map();
+  roleMenus.forEach(m => {
+     // If user override didn't explicitly deny it
+     if (userMenuMap.get(m.id) !== null) {
+        finalMenuMap.set(m.id, m);
+     }
+  });
+
+  // Add any explicitly granted overrides
+  userMenuMap.forEach((m, id) => {
+     if (m !== null) finalMenuMap.set(id, m);
+  });
+
+  const sortedMenus = Array.from(finalMenuMap.values()).sort((a, b) => a.order - b.order);
+
+  res.status(HTTP_STATUS.OK).json(
+    new ApiResponse(HTTP_STATUS.OK, sortedMenus, 'User menus retrieved successfully.')
+  );
 });

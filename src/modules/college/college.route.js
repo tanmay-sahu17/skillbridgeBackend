@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import * as collegeController from './college.controller.js';
+import * as rbacController from './college.rbac.controller.js';
 import { protect, authorize } from '../../middlewares/auth.middleware.js';
 import upload from '../../config/multer.config.js';
 
@@ -44,5 +45,11 @@ router.post('/onboarding/terms', collegeController.acceptTerms);
 // ── Progress & Data Routes ──
 router.get('/onboarding/progress', collegeController.getProgress);
 router.get('/data', collegeController.getCollegeData);
+
+// ── RBAC & Staff Management Routes ──
+router.post('/rbac/custom-role', rbacController.createCustomRole);
+router.post('/rbac/role-permission', rbacController.assignRolePermissions);
+router.post('/rbac/staff', rbacController.createCollegeStaff);
+router.post('/rbac/user-permission', rbacController.setUserOverridePermission);
 
 export default router;
