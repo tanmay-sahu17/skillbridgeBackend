@@ -9,6 +9,7 @@ import errorHandler from './middlewares/error.middleware.js';
 import authRoutes from './modules/auth/auth.route.js';
 import collegeRoutes from './modules/college/college.route.js';
 import studentRoutes from './modules/student/student.route.js';
+import searchRoutes from './modules/search/search.route.js';
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.get('/health', (req, res) => {
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/college', collegeRoutes);
 app.use('/api/v1/student', studentRoutes);
+app.use('/api/v1/search', searchRoutes);
 
 // ── 404 Handler ──
 app.use((req, res) => {
