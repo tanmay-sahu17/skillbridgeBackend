@@ -43,6 +43,7 @@
     "dotenv": "^16.4.5",
     "ejs": "^6.0.1",
     "express": "^4.19.2",
+    "express-rate-limit": "^8.6.2",
     "helmet": "^7.1.0",
     "ioredis": "^6.0.0",
     "jsonwebtoken": "^9.0.2",
@@ -60,8 +61,21 @@
   "devDependencies": {
     "husky": "^9.1.7",
     "jest": "^30.4.2",
+    "lint-staged": "^17.3.0",
     "nodemon": "^3.1.4",
+    "prettier": "^3.9.6",
     "prisma": "^5.22.0",
     "supertest": "^7.2.2"
+  },
+  "lint-staged": {
+    "*.js": [
+      "prettier --write"
+    ],
+    "*.{json,md,yml}": [
+      "prettier --write"
+    ],
+    "prisma/schema.prisma": [
+      "npm run prisma:validate"
+    ]
   }
 }
