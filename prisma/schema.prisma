@@ -84,6 +84,54 @@ enum PlatformRole {
   BOTH
 }
 
+enum GigStatus {
+  DRAFT
+  PENDING_APPROVAL
+  CHANGES_REQUESTED
+  APPROVED
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  CLOSED
+  REJECTED
+}
+
+enum GigVisibility {
+  INTERNAL
+  PUBLIC
+}
+
+enum GigApplicationStatus {
+  APPLIED
+  UNDER_REVIEW
+  INTERVIEW_SCHEDULED
+  SELECTED
+  REJECTED
+  WITHDRAWN
+}
+
+enum GigTaskStatus {
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+}
+
+enum ResourceType {
+  API_KEY
+  AWS_CREDITS
+  SERVER_ACCESS
+  SOFTWARE_LICENSE
+  OTHER
+}
+
+enum RewardType {
+  CERTIFICATE
+  LETTER_OF_RECOMMENDATION
+  BADGE
+  OTHER
+}
+
 // ==================== COMPOSITE TYPES (Embedded Documents) ====================
 
 type OtherLink {
@@ -249,6 +297,7 @@ model College {
   students Student[]
   staffUsers User[] @relation("CollegeStaff")
   customRoles CustomRole[]
+  gigs        Gig[]
 
   // Section-wise embedded data
   basicInfo           CollegeBasicInfo?
@@ -326,6 +375,18 @@ model Student {
   completedSections   Int[]   @default([])
   onboardingCompleted Boolean @default(false)
 
+  // Gamification & Gig Stats
+  gigLevel            Int     @default(1)
+  gigXp               Int     @default(0)
+  gigPoints           Int     @default(0)
+  gigsCompleted       Int     @default(0)
+  
+  // Relations to Gig System
+  createdGigs         Gig[]
+  applications        GigApplication[]
+  badges              UserBadge[]
+  assignedTasks       GigTask[]
+
   // Admin / College review
   status StudentStatus @default(PENDING)
 
@@ -398,4 +459,125 @@ model UserMenuPermission {
   updatedAt    DateTime   @updatedAt
 
   @@unique([userId, menuId])
+}
+
+// ==================== GIG MANAGEMENT MODELS ====================
+
+model Gig {
+  id             String        @id @default(auto()) @map("_id") @db.ObjectId
+  title          String
+  description    String
+  category       String?
+  skillsRequired String[]
+  duration       String?
+  budget         Float?        // Optional, for future use
+  paymentEnabled Boolean       @default(false)
+  
+  status         GigStatus     @default(DRAFT)
+  visibility     GigVisibility @default(INTERNAL)
+  feedback       String?       // College notes for rejection/resubmission
+  
+  creatorId      String        @db.ObjectId
+  creator        Student       @relation(fields: [creatorId], references: [id])
+  
+  collegeId      String        @db.ObjectId
+  college        College       @relation(fields: [collegeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  applications   GigApplication[]
+  tasks          GigTask[]
+  resources      GigResource[]
+  rewards        GigReward[]
+
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([creatorId])
+  @@index([collegeId])
+}
+
+model GigApplication {
+  id             String               @id @default(auto()) @map("_id") @db.ObjectId
+  gigId          String               @db.ObjectId
+  gig            Gig                  @relation(fields: [gigId], references: [id], onDelete: Cascade)
+  
+  applicantId    String               @db.ObjectId
+  applicant      Student              @relation(fields: [applicantId], references: [id])
+
+  status         GigApplicationStatus @default(APPLIED)
+  coverLetter    String?
+  resumeUrl      String?
+  notes          String?              // Internal notes by Gig Manager
+
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  @@unique([gigId, applicantId])
+}
+
+model GigTask {
+  id             String        @id @default(auto()) @map("_id") @db.ObjectId
+  gigId          String        @db.ObjectId
+  gig            Gig           @relation(fields: [gigId], references: [id], onDelete: Cascade)
+
+  title          String
+  description    String?
+  status         GigTaskStatus @default(TODO)
+  points         Int           @default(10) // XP awarded on completion
+
+  assigneeId     String?       @db.ObjectId
+  assignee       Student?      @relation(fields: [assigneeId], references: [id])
+
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  completedAt    DateTime?
+}
+
+model GigResource {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  gigId          String       @db.ObjectId
+  gig            Gig          @relation(fields: [gigId], references: [id], onDelete: Cascade)
+  
+  type           ResourceType
+  name           String
+  details        String       // JSON string or text explaining how to access
+
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model GigReward {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  gigId          String       @db.ObjectId
+  gig            Gig          @relation(fields: [gigId], references: [id], onDelete: Cascade)
+  
+  type           RewardType
+  description    String
+
+  createdAt      DateTime     @default(now())
+}
+
+model Badge {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  name           String       @unique
+  description    String
+  iconUrl        String
+  criteriaType   String       // e.g., 'GIGS_COMPLETED', 'POINTS_EARNED'
+  criteriaValue  Int          // e.g., 5
+
+  userBadges     UserBadge[]
+
+  createdAt      DateTime     @default(now())
+}
+
+model UserBadge {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  studentId      String       @db.ObjectId
+  student        Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  
+  badgeId        String       @db.ObjectId
+  badge          Badge        @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  awardedAt      DateTime     @default(now())
+
+  @@unique([studentId, badgeId])
 }
