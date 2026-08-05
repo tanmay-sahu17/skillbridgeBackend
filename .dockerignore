@@ -1,0 +1,38 @@
+node_modules
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Build files
+dist
+build
+out
+
+# Git and OS files
+.git
+.gitignore
+.DS_Store
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Editor files
+.vscode
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Documentation
+docs/
+
+# Tests
+coverage/
+
+# Docker
+docker-compose.yml
+.dockerignore
