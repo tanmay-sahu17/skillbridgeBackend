@@ -1,0 +1,661 @@
+{
+  "source_file": "course-branch.txt",
+  "purpose": "MongoDB-ready catalog of course families, branch guides, and extracted course names",
+  "major_branch_guide": [
+    {
+      "category": "Technical Courses",
+      "programs": [
+        {
+          "name": "B Tech / BE",
+          "full_name": "Bachelor of Technology / Bachelor of Engineering",
+          "branch_groups": [
+            {
+              "name": "Computer Science & IT",
+              "specializations": [
+                "Computer Science & Engineering (CSE)",
+                "Information Technology (IT)",
+                "Artificial Intelligence & Machine Learning (AI/ML)",
+                "Data Science",
+                "Cyber Security",
+                "Cloud Computing"
+              ]
+            },
+            {
+              "name": "Core Engineering",
+              "specializations": [
+                "Mechanical Engineering",
+                "Civil Engineering",
+                "Electrical Engineering (EE)",
+                "Electronics & Communication Engineering (ECE)",
+                "Chemical Engineering"
+              ]
+            },
+            {
+              "name": "Specialized & Emerging",
+              "specializations": [
+                "Aerospace / Aeronautical Engineering",
+                "Automobile Engineering",
+                "Biotechnology Engineering",
+                "Biomedical Engineering",
+                "Agricultural Engineering",
+                "Environmental Engineering",
+                "Robotics & Automation",
+                "Marine Engineering",
+                "Petroleum Engineering"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "B Arch / M Arch",
+          "full_name": "Architecture",
+          "branches": [
+            "Urban Design & Planning",
+            "Landscape Architecture",
+            "Sustainable / Green Architecture",
+            "Architectural Conservation",
+            "Building Construction & Management",
+            "Interior Design"
+          ]
+        },
+        {
+          "name": "BFT / MFT",
+          "full_name": "Fashion Technology",
+          "branches": [
+            "Apparel Production & Manufacturing",
+            "Textile Design & Technology",
+            "Fashion Merchandising & Retail Management",
+            "Leather & Footwear Technology"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Degree (Arts, Science, Commerce, Management)",
+      "programs": [
+        {
+          "name": "BA / MA",
+          "full_name": "Bachelor & Master of Arts",
+          "branch_groups": [
+            {
+              "name": "Humanities & Social Sciences",
+              "specializations": [
+                "English Literature",
+                "History",
+                "Political Science",
+                "Sociology",
+                "Psychology",
+                "Economics",
+                "Philosophy",
+                "Geography",
+                "International Relations"
+              ]
+            },
+            {
+              "name": "Languages",
+              "specializations": [
+                "Hindi",
+                "Sanskrit",
+                "French",
+                "German",
+                "Spanish",
+                "Linguistics"
+              ]
+            },
+            {
+              "name": "Performing & Fine Arts",
+              "specializations": [
+                "Music (Vocal/Instrumental)",
+                "Fine Arts (BFA/MFA)",
+                "Visual Arts (BVA)",
+                "Performing Arts (BPA/MPA)"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "B Sc / M Sc",
+          "full_name": "Bachelor & Master of Science",
+          "branch_groups": [
+            {
+              "name": "Physical Sciences",
+              "specializations": [
+                "Physics",
+                "Chemistry",
+                "Mathematics",
+                "Statistics"
+              ]
+            },
+            {
+              "name": "Life Sciences",
+              "specializations": [
+                "Physics",
+                "Botany",
+                "Zoology",
+                "Biotechnology",
+                "Microbiology",
+                "Biochemistry",
+                "Genetics",
+                "Food Science & Nutrition"
+              ]
+            },
+            {
+              "name": "Computer Sciences",
+              "specializations": [
+                "Computer Science",
+                "Electronics",
+                "Data Science"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "B Com / M Com",
+          "full_name": "Commerce",
+          "branches": [
+            "Accounting & Finance",
+            "Banking & Insurance",
+            "Taxation & Auditing",
+            "Computer Applications in Business",
+            "Financial Markets & Investment Analysis"
+          ]
+        },
+        {
+          "name": "BBA / BBS / Integrated MBA",
+          "full_name": "Management",
+          "branches": [
+            "General Management",
+            "Marketing",
+            "Human Resource Management (HRM)",
+            "Finance",
+            "International Business (IB)",
+            "Digital Business & E-Commerce"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Medical & Allied Health Sciences",
+      "programs": [
+        {
+          "name": "MBBS / MD / MS / DM / MCh",
+          "full_name": "Medicine and Surgery",
+          "branch_groups": [
+            {
+              "name": "Pre & Para-Clinical Specialties (MD/MS)",
+              "specializations": [
+                "Anatomy",
+                "Physiology",
+                "Pathology",
+                "Microbiology",
+                "Pharmacology",
+                "Forensic Medicine",
+                "Community Medicine"
+              ]
+            },
+            {
+              "name": "Clinical Medicine (MD)",
+              "specializations": [
+                "General Medicine",
+                "Pediatrics",
+                "Dermatology",
+                "Psychiatry",
+                "Anesthesiology",
+                "Radiology",
+                "Pulmonology/Chest Medicine"
+              ]
+            },
+            {
+              "name": "Clinical Surgery (MS)",
+              "specializations": [
+                "General Surgery",
+                "Orthopedics",
+                "Ophthalmology",
+                "ENT (Otorhinolaryngology)",
+                "Obstetrics & Gynecology (OB-GYN)"
+              ]
+            },
+            {
+              "name": "Super-Specialties (DM / MCh)",
+              "specializations": [
+                "Cardiology",
+                "Neurology",
+                "Gastroenterology",
+                "Nephrology",
+                "Oncology",
+                "Neurosurgery",
+                "Urology",
+                "Plastic Surgery",
+                "Cardiothoracic Surgery"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "BDS / MDS",
+          "full_name": "Dental Surgery",
+          "branches": [
+            "Oral & Maxillofacial Surgery",
+            "Orthodontics & Dentofacial Orthopedics",
+            "Conservative Dentistry & Endodontics",
+            "Prosthodontics & Crown Bridge",
+            "Periodontology",
+            "Pediatric Dentistry"
+          ]
+        },
+        {
+          "name": "AYUSH Sciences",
+          "full_name": "BAMS, BHMS, BUMS, BNYS, Ayurveda PG",
+          "branch_groups": [
+            {
+              "name": "Ayurveda (BAMS)",
+              "specializations": [
+                "Kayachikitsa (Internal Medicine)",
+                "Shalya Tantra (Surgery)",
+                "Kaumarbhritya (Pediatrics)",
+                "Dravya Guna (Pharmacology)"
+              ]
+            },
+            {
+              "name": "Homeopathy (BHMS)",
+              "specializations": [
+                "Materia Medica",
+                "Organon of Medicine",
+                "Repertory"
+              ]
+            },
+            {
+              "name": "Unani (BUMS)",
+              "specializations": [
+                "Moalajat (Medicine)",
+                "Ilmul Saidla (Pharmacy)"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Nursing",
+          "full_name": "ANM, GNM, B Sc Nursing, M Sc Nursing, PBBSC Nursing",
+          "branches": [
+            "Medical-Surgical Nursing",
+            "Pediatric / Child Health Nursing",
+            "Obstetrics & Gynecological Nursing",
+            "Community Health Nursing",
+            "Psychiatric / Mental Health Nursing"
+          ]
+        },
+        {
+          "name": "Therapy & Allied Health Sciences",
+          "full_name": "BPT, MPT, BLT, MLT, MIT, Allied Health Sciences",
+          "branch_groups": [
+            {
+              "name": "Physiotherapy (BPT / MPT)",
+              "specializations": [
+                "Orthopedics",
+                "Neurology",
+                "Musculoskeletal",
+                "Sports Physiotherapy",
+                "Pediatrics",
+                "Cardiovascular & Pulmonary"
+              ]
+            },
+            {
+              "name": "Lab Technology (BLT / MLT / CMLT)",
+              "specializations": [
+                "Clinical Pathology",
+                "Hematology",
+                "Biochemistry",
+                "Histopathology"
+              ]
+            },
+            {
+              "name": "Imaging Technology (MIT / DMIT)",
+              "specializations": [
+                "Radiography",
+                "MRI & CT Scanning",
+                "Ultrasonography"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Professional Courses",
+      "programs": [
+        {
+          "name": "MBA / MMS / MIB / MBE",
+          "branches": [
+            "Marketing Management",
+            "Finance Management",
+            "Human Resource Management (HRM)",
+            "Operations & Supply Chain Management",
+            "Information Technology / Systems (IT)",
+            "Business Analytics & Data Science",
+            "Hospital & Healthcare Management (MHA / BHA)",
+            "Hotel, Travel & Tourism Management (BHM, BTA, BTH, BTTM, MTA)"
+          ]
+        },
+        {
+          "name": "Law",
+          "full_name": "LLB, LLM, BA LLB, BCom LLB, BBA LLB",
+          "branches": [
+            "Constitutional Law",
+            "Corporate & Commercial Law",
+            "Criminal Law",
+            "Intellectual Property Rights (IPR)",
+            "Cyber Law",
+            "International Law",
+            "Taxation Law"
+          ]
+        },
+        {
+          "name": "Education & Physical Education",
+          "full_name": "D Ed, B Ed, M Ed, B PEd, M PEd, BSc Ed, NST",
+          "branch_groups": [
+            {
+              "name": "Pedagogy / Subject Specializations",
+              "specializations": [
+                "Mathematics",
+                "Science",
+                "Social Studies",
+                "English",
+                "Languages"
+              ]
+            },
+            {
+              "name": "Special Education",
+              "specializations": [
+                "Hearing Impairment",
+                "Visual Impairment",
+                "Mental Retardation / Learning Disabilities"
+              ]
+            },
+            {
+              "name": "Physical Education",
+              "specializations": [
+                "Sports Coaching",
+                "Sports Biomechanics",
+                "Exercise Physiology"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Pharmacy",
+          "full_name": "D Pharma, B Pharma, M Pharma, Pharma D",
+          "branches": [
+            "Pharmaceutics",
+            "Pharmacology",
+            "Pharmaceutical Chemistry",
+            "Pharmacognosy",
+            "Pharmacy Practice / Clinical Pharmacy"
+          ]
+        },
+        {
+          "name": "Journalism & Communication",
+          "full_name": "BCJ / MCJ",
+          "branches": [
+            "Print Journalism",
+            "Broadcast Journalism (TV & Radio)",
+            "Digital Media & New Media",
+            "Public Relations & Corporate Communication",
+            "Advertising & Event Management"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Technical Diplomas & Short-Term Courses",
+      "programs": [
+        {
+          "name": "ITI & Vocational Courses",
+          "full_name": "ITI, B Voc, BVOC",
+          "branch_groups": [
+            {
+              "name": "Engineering Trades",
+              "specializations": [
+                "Fitter",
+                "Electrician",
+                "Turner",
+                "Machinist",
+                "Welder",
+                "Motor Vehicle Mechanic",
+                "Draughtsman (Civil/Mechanical)"
+              ]
+            },
+            {
+              "name": "Non-Engineering & Vocational Trades",
+              "specializations": [
+                "COPA (Computer Operator and Programming Assistant)",
+                "Fashion Design Technology",
+                "Software Development",
+                "Web Designing",
+                "Retail Management"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Medical Technician Certifications & Diplomas",
+          "full_name": "DA, DFM, DOMS, Cardiology Technician, CECG, CCTC, DMLT, DMRD, DOTT, DPT, etc.",
+          "branches": [
+            "Anesthesia Technology (DA)",
+            "Ophthalmic Technology (DOMS)",
+            "ECG & Cardiovascular Technology (CECG, CCARDIO)",
+            "Dialysis Technology (DDIALY)",
+            "Medical Radiography & Imaging (DMRD, DRTT)",
+            "Operation Theatre Technology (COT, DOTT)",
+            "Emergency & Trauma Care (DFEM)"
+          ]
+        }
+      ]
+    }
+  ],
+  "extracted_course_list": [
+    {
+      "institution_type": "Degree",
+      "courses": [
+        { "name": "B Com", "description": "Bachelor of Commerce" },
+        { "name": "B Sc", "description": "Bachelor of Science" },
+        { "name": "BA", "description": "Bachelor of Arts" },
+        { "name": "BACHELOR OF MUSIC" },
+        { "name": "BBA", "description": "Bachelor of Business Administration" },
+        { "name": "BBS", "description": "Bachelor of Business Studies" },
+        { "name": "BCA", "description": "Bachelor of Computer Application" },
+        { "name": "BFA", "description": "Bachelor of Fine Arts" },
+        { "name": "BFSC", "description": "Bachelor of Fisheries Science" },
+        { "name": "BSW", "description": "Bachelor of Social Work" },
+        { "name": "INTEGRATED B Sc" },
+        { "name": "INTEGRATED BA" },
+        { "name": "M Com", "description": "Master of Commerce" },
+        { "name": "M Sc", "description": "Master of Science" },
+        { "name": "MA", "description": "Master of Arts" },
+        { "name": "MSW", "description": "Master of Social Work" }
+      ]
+    },
+    {
+      "institution_type": "Medical",
+      "courses": [
+        { "name": "Ayurveda PG" },
+        { "name": "Bachelor of Physio Therapy" },
+        {
+          "name": "BAMS",
+          "description": "Bachelor of Ayurvedic Medical Sciences"
+        },
+        { "name": "BDS", "description": "Bachelor of Dental Surgery" },
+        {
+          "name": "BHMS",
+          "description": "Bachelor of Homeopathy Medicine & Surgery"
+        },
+        { "name": "BLT", "description": "Bachelor of Lab Technology" },
+        {
+          "name": "BNYS",
+          "description": "Bachelor of Naturopathy and Yogic Science"
+        },
+        { "name": "BPT", "description": "Bachelor of Physiotherapy" },
+        {
+          "name": "BUMS",
+          "description": "Bachelor of Unani Medicine & Surgery"
+        },
+        { "name": "DA", "description": "Diploma in Anaesthetics" },
+        {
+          "name": "DFM (FORENSIC)",
+          "description": "Diploma in Forensic Medicine"
+        },
+        { "name": "DM", "description": "Doctor of Medicine" },
+        {
+          "name": "DOMS (OPHTHALMOLOGY)",
+          "description": "Diploma in Ophthalmic Medicine and Surgery"
+        },
+        { "name": "Master of Public Health" },
+        {
+          "name": "MBBS",
+          "description": "Bachelor of Medicine and Bachelor of Surgery"
+        },
+        { "name": "MD", "description": "Medical degrees" },
+        { "name": "MDS", "description": "Master of Dental Surgery" },
+        {
+          "name": "MHA (HEALTH)",
+          "description": "Master of Health Administration"
+        },
+        { "name": "MPT", "description": "Master of Physiotherapy" },
+        { "name": "MS (Medical)" },
+        { "name": "MVSC", "description": "Master of Veterinary Science" },
+        { "name": "Pharm D Post baccalaureate" },
+        { "name": "Pharma D" }
+      ]
+    },
+    {
+      "institution_type": "PhD",
+      "courses": [{ "name": "PHD" }]
+    },
+    {
+      "institution_type": "Professional",
+      "courses": [
+        { "name": "Advanced Diploma Courses" },
+        { "name": "Allied health science" },
+        { "name": "ANM" },
+        { "name": "B Com LLB", "description": "Bachelor of Commerce & Law" },
+        { "name": "B Desgn", "description": "Bachelor of Designs" },
+        { "name": "B Ed", "description": "Bachelor of Education" },
+        { "name": "B PEd", "description": "Bachelor of Physical Education" },
+        { "name": "B Pharma", "description": "Bachelor of Pharmacy" },
+        { "name": "B Plan", "description": "Bachelor of Planning" },
+        {
+          "name": "B Sc (Nursing)",
+          "description": "Bachelor of Science (Nursing)"
+        },
+        { "name": "B Voc", "description": "Bachelor of Vocational" },
+        { "name": "BA LLB", "description": "Bachelor of Arts & Law" },
+        {
+          "name": "BBA LLB",
+          "description": "Bachelor of Business Administration & Law"
+        },
+        { "name": "BBT" },
+        {
+          "name": "BCJ",
+          "description": "Bachelor of Communication & Journalism"
+        },
+        {
+          "name": "BHA",
+          "description": "Bachelors in Hospital Administration"
+        },
+        { "name": "BHM", "description": "Bachelor of Hotel Management" },
+        { "name": "BLS", "description": "Bachelor of Library Science" },
+        { "name": "BNg", "description": "Bachelor of Nursing" },
+        { "name": "BPA", "description": "Bachelor of Performing Arts" },
+        { "name": "BPH", "description": "Bachelors in Public Health" },
+        { "name": "BSc Ed" },
+        { "name": "BTA", "description": "Bachelor of Tourism Administration" },
+        { "name": "BTH", "description": "Bachelor of Tourism & Hospitality" },
+        {
+          "name": "BTTM",
+          "description": "Bachelor of Travel & Tourism Management"
+        },
+        { "name": "BVA", "description": "Bachelor of Visual Arts" },
+        { "name": "BVOC" },
+        { "name": "BVSC", "description": "Bachelor of Veterinary Science" },
+        {
+          "name": "BVSC and AH",
+          "description": "Bachelor of Veterinary Science & Animal Husbandry"
+        },
+        {
+          "name": "Short-Term/Diploma Certificates",
+          "description": "CANS, CARDIOLOGY TECHNICIAN, CAT, CCARDIO, CCTC, CECG, CEPT, CHI, CHT, CLT, CMLT, CMXT, COT, COTT, CRA, CRI, CRUST, CTT"
+        },
+        { "name": "D Ed", "description": "Diploma in Education" },
+        { "name": "D Pharma", "description": "Diploma in Pharmacy" },
+        {
+          "name": "Medical & Technical Diplomas",
+          "description": "DAM, DANS, DBBT, DCARDIO, DCBR, DCRE, DDHY, DDIALY, DDRA, DDTH, DEAIE, DECG, DECSE(MR), DENTAL HYGIENIST, DEPT, DFEM, DHA, DHFSM, DHI, DHLS, DHLST, DHMCT, DMIT, DMLT, DMRD, DMRT, DMST, DMSY, DMXT, DO, DOA, DOM, DOT, DOTT, DPM, DPMT, DPT, DREST, DRGA, DRTT, DRUST, DSE, DSME, DSWMECH, DTCD, DTE, DTT, DVR"
+        },
+        { "name": "Diploma Courses (General)" },
+        { "name": "FWT" },
+        { "name": "GNM (NURSING)" },
+        { "name": "IMA" },
+        { "name": "IMSC" },
+        { "name": "Integrated MBA" },
+        { "name": "ITI Courses" },
+        { "name": "LLB", "description": "Bachelor of Law" },
+        { "name": "LLM", "description": "Master of Laws" },
+        { "name": "M Desgn", "description": "Master of Design" },
+        { "name": "M Ed", "description": "Master of Education" },
+        { "name": "M PED", "description": "Master of Physical Education" },
+        { "name": "M Pharma", "description": "Master of Pharmacy" },
+        { "name": "M Phil", "description": "Master of Philosophy" },
+        { "name": "M Sc (NURSING)" },
+        { "name": "Master in Marketing" },
+        { "name": "Master of International Business" },
+        { "name": "MBA", "description": "Master of Business Administration" },
+        { "name": "MBE", "description": "Master of Business Economics" },
+        { "name": "MBS", "description": "Master of Business Studies" },
+        { "name": "MCA", "description": "Master of Computer Application" },
+        { "name": "MCJ", "description": "Master of Communication Journalism" },
+        { "name": "MFA", "description": "Master of Finance and Accounting" },
+        { "name": "MFM", "description": "Master of Fashion Management" },
+        {
+          "name": "MHM",
+          "description": "Master of Hotel Management / Master of Hospital Management"
+        },
+        { "name": "MHRD" },
+        { "name": "MIT", "description": "Medical Imaging Technology" },
+        { "name": "MLT", "description": "Medical Lab Technology" },
+        { "name": "MMS", "description": "Master of Management Studies" },
+        { "name": "MPA", "description": "Master of Performing Arts" },
+        { "name": "MPH", "description": "Masters in Public Health" },
+        { "name": "MPHA" },
+        { "name": "MPHW" },
+        { "name": "MPVA", "description": "Multi-Purpose Veterinary Assistant" },
+        { "name": "MRM / MRMLV" },
+        { "name": "MS (Professional)" },
+        { "name": "MTA", "description": "Master of Tourism Administration" },
+        { "name": "NST", "description": "Nursery Training" },
+        { "name": "PBBSC(NURSING)" },
+        { "name": "PMOA" },
+        { "name": "Post Graduation Diploma Courses" },
+        {
+          "name": "Special Diplomas/Certificates",
+          "description": "SDEBM, SDECN, SDECP, SDEES, SDEIE, SDETV, UGDPET"
+        }
+      ]
+    },
+    {
+      "institution_type": "Technical",
+      "courses": [
+        { "name": "Aircraft Maintenance Engineering" },
+        { "name": "B Arch", "description": "Bachelor of Architecture" },
+        { "name": "B Tech", "description": "Bachelor of Technology" },
+        { "name": "BE", "description": "Bachelor of Engineering" },
+        { "name": "BFT", "description": "Bachelor of Fashion Technology" },
+        { "name": "INTEGRATED ENGINEERING B TECH" },
+        { "name": "M Arch", "description": "Master of Architecture" },
+        { "name": "M Tech", "description": "Master of Technology" },
+        { "name": "ME", "description": "Master of Engineering" },
+        { "name": "MFT", "description": "Master of Fashion Technology" },
+        { "name": "MS (Technical)" },
+        { "name": "MSIT" }
+      ]
+    }
+  ]
+}
