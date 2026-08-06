@@ -376,19 +376,17 @@ export const getUserProfile = async (userId) => {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, 'User not found.');
   }
 
-  // For COLLEGE and STUDENT roles, include onboarding status
+  // For COLLEGE and STUDENT roles, include onboarding status and full details
   let onboarding = null;
+  let collegeDetails = null;
+  let studentDetails = null;
+
   if (user.role === 'COLLEGE') {
     const college = await prisma.college.findUnique({
       where: { userId: user.id },
-      select: {
-        onboardingCompleted: true,
-        currentStep: true,
-        completedSections: true,
-        status: true,
-      },
     });
     if (college) {
+      collegeDetails = college;
       onboarding = {
         onboardingCompleted: college.onboardingCompleted,
         currentStep: college.currentStep,
@@ -399,14 +397,9 @@ export const getUserProfile = async (userId) => {
   } else if (user.role === 'STUDENT') {
     const student = await prisma.student.findUnique({
       where: { userId: user.id },
-      select: {
-        onboardingCompleted: true,
-        currentStep: true,
-        completedSections: true,
-        status: true,
-      },
     });
     if (student) {
+      studentDetails = student;
       onboarding = {
         onboardingCompleted: student.onboardingCompleted,
         currentStep: student.currentStep,
@@ -416,7 +409,7 @@ export const getUserProfile = async (userId) => {
     }
   }
 
-  return { ...user, onboarding };
+  return { ...user, onboarding, college: collegeDetails, student: studentDetails };
 };
 
 /**
