@@ -581,3 +581,102 @@ model UserBadge {
 
   @@unique([studentId, badgeId])
 }
+
+// ==================== MASTER LOCATION MODELS ====================
+
+model State {
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  name      String     @unique
+  districts District[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model District {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  stateId   String   @db.ObjectId
+  state     State    @relation(fields: [stateId], references: [id], onDelete: Cascade)
+  cities    City[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([name, stateId])
+}
+
+model City {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  name       String
+  pincode    String?
+  districtId String   @db.ObjectId
+  district   District @relation(fields: [districtId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([name])
+}
+
+// ==================== MASTER ACCREDITATION MODELS ====================
+
+model Accreditation {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  name         String   @unique
+  abbreviation String?
+  url          String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// ==================== MASTER UNIVERSITY MODELS ====================
+
+model University {
+  id                  String   @id @default(auto()) @map("_id") @db.ObjectId
+  aisheCode           String   @unique
+  name                String
+  state               String?
+  district            String?
+  website             String?
+  yearOfEstablishment Int?
+  location            String?
+  
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([state, district])
+}
+
+// ==================== MASTER COURSES & BRANCHES MODELS ====================
+
+// Embedded types for the hierarchical guide
+type BranchGroupEmbedded {
+  name            String
+  specializations String[]
+}
+
+type ProgramEmbedded {
+  name         String
+  fullName     String?
+  branches     String[]               // For programs that don't have subgroups
+  branchGroups BranchGroupEmbedded[]  // For programs with nested subgroups
+}
+
+// Master model for the Course Families (Major Branch Guide)
+model CourseCategory {
+  id        String            @id @default(auto()) @map("_id") @db.ObjectId
+  name      String            @unique
+  programs  ProgramEmbedded[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Master model for the Flat Course List
+model Course {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  name            String   @unique
+  description     String?
+  institutionType String
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
