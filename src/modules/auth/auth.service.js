@@ -6,40 +6,61 @@ import { HTTP_STATUS } from '../../constants/index.js';
 import { sendEmail, generateOtp } from '../../utils/mailer.js';
 import jwt from 'jsonwebtoken';
 import appConfig from '../../config/app.config.js';
-import { getOtpTemplate, getResetPasswordTemplate } from '../../utils/emailTemplates.js';
+import {
+  getOtpTemplate,
+  getResetPasswordTemplate,
+} from '../../utils/emailTemplates.js';
 import { checkOtpRateLimit, resetOtpTracker } from '../../utils/otpTracker.js';
 
 /**
  * Register a new user
  * If role is COLLEGE, also creates an empty College record for onboarding
  */
-export const registerUser = async ({ name, email, password, role, collegeId }) => {
+export const registerUser = async ({
+  name,
+  email,
+  password,
+  role,
+  collegeId,
+}) => {
   // Common validation for STUDENT role
   let college = null;
   if (role === 'STUDENT') {
     if (!collegeId) {
-      throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'collegeId is required for student registration.');
+      throw new ApiError(
+        HTTP_STATUS.BAD_REQUEST,
+        'collegeId is required for student registration.',
+      );
     }
-    
+
     college = await prisma.college.findUnique({
       where: { id: collegeId },
     });
-    
+
     if (!college) {
       throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Selected college not found.');
     }
-    
+
     if (college.status !== 'APPROVED') {
-      throw new ApiError(HTTP_STATUS.FORBIDDEN, 'Selected college is not yet approved.');
+      throw new ApiError(
+        HTTP_STATUS.FORBIDDEN,
+        'Selected college is not yet approved.',
+      );
     }
-    
+
     const domain = college.basicInfo?.domain;
     if (!domain) {
-      throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Selected college does not have a registered domain for student signups.');
+      throw new ApiError(
+        HTTP_STATUS.BAD_REQUEST,
+        'Selected college does not have a registered domain for student signups.',
+      );
     }
-    
+
     if (!email.endsWith(`@${domain}`)) {
-      throw new ApiError(HTTP_STATUS.BAD_REQUEST, `Please use your official college email ending with @${domain}`);
+      throw new ApiError(
+        HTTP_STATUS.BAD_REQUEST,
+        `Please use your official college email ending with @${domain}`,
+      );
     }
   }
   // Check if user already exists
@@ -47,7 +68,7 @@ export const registerUser = async ({ name, email, password, role, collegeId }) =
   if (existingUser) {
     throw new ApiError(
       HTTP_STATUS.CONFLICT,
-      'User with this email already exists.'
+      'User with this email already exists.',
     );
   }
 
@@ -117,14 +138,15 @@ export const registerUser = async ({ name, email, password, role, collegeId }) =
   // Send OTP email asynchronously
   const emailHtml = getOtpTemplate(otp);
   sendEmail(user.email, 'SkillBridge - Verify your email', emailHtml).catch(
-    (err) => console.error('Failed to send OTP email:', err)
+    (err) => console.error('Failed to send OTP email:', err),
   );
 
   // Do NOT generate token here to ensure users verify their email first
-  return { 
-    user, 
-    onboarding, 
-    message: 'Registration successful! Please verify your email using the OTP sent to you.' 
+  return {
+    user,
+    onboarding,
+    message:
+      'Registration successful! Please verify your email using the OTP sent to you.',
   };
 };
 
@@ -147,7 +169,10 @@ export const verifyEmail = async ({ email, otp }) => {
   });
 
   if (!otpRecord) {
-    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'No OTP found. Please request a new one.');
+    throw new ApiError(
+      HTTP_STATUS.BAD_REQUEST,
+      'No OTP found. Please request a new one.',
+    );
   }
 
   if (otpRecord.otp !== otp) {
@@ -155,7 +180,10 @@ export const verifyEmail = async ({ email, otp }) => {
   }
 
   if (new Date() > otpRecord.expiresAt) {
-    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'OTP has expired. Please request a new one.');
+    throw new ApiError(
+      HTTP_STATUS.BAD_REQUEST,
+      'OTP has expired. Please request a new one.',
+    );
   }
 
   // Update user as verified
@@ -182,20 +210,30 @@ export const verifyEmail = async ({ email, otp }) => {
   if (user.role === 'COLLEGE') {
     const college = await prisma.college.findUnique({
       where: { userId: user.id },
-      select: { onboardingCompleted: true, currentStep: true, completedSections: true, status: true },
+      select: {
+        onboardingCompleted: true,
+        currentStep: true,
+        completedSections: true,
+        status: true,
+      },
     });
     if (college) onboarding = college;
   } else if (user.role === 'STUDENT') {
     const student = await prisma.student.findUnique({
       where: { userId: user.id },
-      select: { onboardingCompleted: true, currentStep: true, completedSections: true, status: true },
+      select: {
+        onboardingCompleted: true,
+        currentStep: true,
+        completedSections: true,
+        status: true,
+      },
     });
     if (student) onboarding = student;
   }
 
   // Return user without password
   const { password: _, ...userWithoutPassword } = user;
-  
+
   return { user: userWithoutPassword, token, onboarding };
 };
 
@@ -237,17 +275,14 @@ export const loginUser = async ({ email, password }) => {
   // Find user by email
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) {
-    throw new ApiError(
-      HTTP_STATUS.UNAUTHORIZED,
-      'Invalid email or password.'
-    );
+    throw new ApiError(HTTP_STATUS.UNAUTHORIZED, 'Invalid email or password.');
   }
 
   // Check if email is verified
   if (!user.isEmailVerified) {
     throw new ApiError(
       HTTP_STATUS.FORBIDDEN,
-      'Please verify your email before logging in.'
+      'Please verify your email before logging in.',
     );
   }
 
@@ -255,17 +290,14 @@ export const loginUser = async ({ email, password }) => {
   if (!user.isActive) {
     throw new ApiError(
       HTTP_STATUS.FORBIDDEN,
-      'Your account has been deactivated. Contact admin.'
+      'Your account has been deactivated. Contact admin.',
     );
   }
 
   // Verify password
   const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid) {
-    throw new ApiError(
-      HTTP_STATUS.UNAUTHORIZED,
-      'Invalid email or password.'
-    );
+    throw new ApiError(HTTP_STATUS.UNAUTHORIZED, 'Invalid email or password.');
   }
 
   // Generate JWT token
@@ -335,6 +367,8 @@ export const getUserProfile = async (userId) => {
       isEmailVerified: true,
       createdAt: true,
       updatedAt: true,
+      student: true,
+      college: true,
     },
   });
 
@@ -391,17 +425,28 @@ export const getUserProfile = async (userId) => {
 export const forgotPassword = async ({ email }) => {
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) {
-    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'User with this email does not exist.');
+    throw new ApiError(
+      HTTP_STATUS.NOT_FOUND,
+      'User with this email does not exist.',
+    );
   }
 
   const secret = appConfig.jwt.secret + user.password;
-  const token = jwt.sign({ id: user.id, email: user.email, purpose: 'RESET_PASSWORD' }, secret, {
-    expiresIn: '15m',
-  });
+  const token = jwt.sign(
+    { id: user.id, email: user.email, purpose: 'RESET_PASSWORD' },
+    secret,
+    {
+      expiresIn: '15m',
+    },
+  );
 
   const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?id=${user.id}&token=${token}`;
-  
-  await sendEmail(email, 'SkillBridge - Reset Your Password', getResetPasswordTemplate(resetLink));
+
+  await sendEmail(
+    email,
+    'SkillBridge - Reset Your Password',
+    getResetPasswordTemplate(resetLink),
+  );
 };
 
 /**
@@ -420,7 +465,10 @@ export const resetPassword = async ({ userId, token, newPassword }) => {
       throw new Error('Invalid token purpose');
     }
   } catch (error) {
-    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid or expired password reset link.');
+    throw new ApiError(
+      HTTP_STATUS.BAD_REQUEST,
+      'Invalid or expired password reset link.',
+    );
   }
 
   const hashedPassword = await bcrypt.hash(newPassword, 10);
