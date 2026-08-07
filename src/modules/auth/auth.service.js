@@ -365,6 +365,8 @@ export const getUserProfile = async (userId) => {
       role: true,
       isActive: true,
       isEmailVerified: true,
+      avatar: true,
+      banner: true,
       createdAt: true,
       updatedAt: true,
       student: true,
@@ -409,7 +411,12 @@ export const getUserProfile = async (userId) => {
     }
   }
 
-  return { ...user, onboarding, college: collegeDetails, student: studentDetails };
+  return {
+    ...user,
+    onboarding,
+    college: collegeDetails,
+    student: studentDetails,
+  };
 };
 
 /**

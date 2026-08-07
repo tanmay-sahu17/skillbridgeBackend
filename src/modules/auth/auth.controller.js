@@ -1,6 +1,13 @@
 import asyncHandler from '../../utils/asyncHandler.js';
 import { ApiResponse } from '../../core/ApiResponse.js';
-import { registerSchema, loginSchema, verifyEmailSchema, resendOtpSchema, forgotPasswordSchema, resetPasswordSchema } from './auth.validation.js';
+import {
+  registerSchema,
+  loginSchema,
+  verifyEmailSchema,
+  resendOtpSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+} from './auth.validation.js';
 import * as authService from './auth.service.js';
 import { HTTP_STATUS } from '../../constants/index.js';
 import prisma from '../../core/prisma.js';
@@ -26,8 +33,8 @@ export const register = asyncHandler(async (req, res) => {
       new ApiResponse(
         HTTP_STATUS.CREATED,
         result,
-        'User registration completed successfully.'
-      )
+        'User registration completed successfully.',
+      ),
     );
 });
 
@@ -46,8 +53,8 @@ export const verifyEmail = asyncHandler(async (req, res) => {
       new ApiResponse(
         HTTP_STATUS.OK,
         result,
-        'Email verified successfully. You are now logged in.'
-      )
+        'Email verified successfully. You are now logged in.',
+      ),
     );
 });
 
@@ -65,8 +72,8 @@ export const resendOtp = asyncHandler(async (req, res) => {
       new ApiResponse(
         HTTP_STATUS.OK,
         null,
-        'A new OTP has been sent to your email.'
-      )
+        'A new OTP has been sent to your email.',
+      ),
     );
 });
 
@@ -85,8 +92,8 @@ export const login = asyncHandler(async (req, res) => {
       new ApiResponse(
         HTTP_STATUS.OK,
         result,
-        'User authentication completed successfully.'
-      )
+        'User authentication completed successfully.',
+      ),
     );
 });
 
@@ -104,8 +111,36 @@ export const getProfile = asyncHandler(async (req, res) => {
       new ApiResponse(
         HTTP_STATUS.OK,
         { user, onboarding },
-        'User profile retrieved successfully.'
-      )
+        'User profile retrieved successfully.',
+      ),
+    );
+});
+
+/**
+ * PUT /api/v1/auth/profile/images
+ * Update logged-in user profile images (Protected)
+ */
+export const updateProfileImages = asyncHandler(async (req, res) => {
+  const { avatar, banner } = req.body;
+
+  const dataToUpdate = {};
+  if (avatar !== undefined) dataToUpdate.avatar = avatar;
+  if (banner !== undefined) dataToUpdate.banner = banner;
+
+  const updatedUser = await prisma.user.update({
+    where: { id: req.user.id },
+    data: dataToUpdate,
+    select: { id: true, name: true, email: true, avatar: true, banner: true },
+  });
+
+  res
+    .status(HTTP_STATUS.OK)
+    .json(
+      new ApiResponse(
+        HTTP_STATUS.OK,
+        updatedUser,
+        'Profile images updated successfully.',
+      ),
     );
 });
 
@@ -121,13 +156,7 @@ export const logout = asyncHandler(async (req, res) => {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
     })
-    .json(
-      new ApiResponse(
-        HTTP_STATUS.OK,
-        null,
-        'Logged out successfully.'
-      )
-    );
+    .json(new ApiResponse(HTTP_STATUS.OK, null, 'Logged out successfully.'));
 });
 
 /**
@@ -144,8 +173,8 @@ export const forgotPassword = asyncHandler(async (req, res) => {
       new ApiResponse(
         HTTP_STATUS.OK,
         null,
-        'Password reset link has been sent to your email.'
-      )
+        'Password reset link has been sent to your email.',
+      ),
     );
 });
 
@@ -163,8 +192,8 @@ export const resetPassword = asyncHandler(async (req, res) => {
       new ApiResponse(
         HTTP_STATUS.OK,
         null,
-        'Password has been reset successfully.'
-      )
+        'Password has been reset successfully.',
+      ),
     );
 });
 
@@ -177,15 +206,17 @@ export const getMyMenus = asyncHandler(async (req, res) => {
 
   // Super admin gets all menus
   if (user.role === 'ADMIN' && user.id === 'admin') {
-     const allMenus = await prisma.menu.findMany({ orderBy: { order: 'asc' } });
-     return res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, allMenus, 'Admin menus retrieved'));
+    const allMenus = await prisma.menu.findMany({ orderBy: { order: 'asc' } });
+    return res
+      .status(HTTP_STATUS.OK)
+      .json(new ApiResponse(HTTP_STATUS.OK, allMenus, 'Admin menus retrieved'));
   }
 
   // 1. Get base custom role
   let customRoleId = user.customRoleId;
   if (!customRoleId) {
     const baseRole = await prisma.customRole.findFirst({
-      where: { name: user.role, collegeId: null }
+      where: { name: user.role, collegeId: null },
     });
     if (baseRole) customRoleId = baseRole.id;
   }
@@ -195,45 +226,55 @@ export const getMyMenus = asyncHandler(async (req, res) => {
   if (customRoleId) {
     const rolePermissions = await prisma.roleMenuPermission.findMany({
       where: { customRoleId },
-      include: { menu: true }
+      include: { menu: true },
     });
     // Include menus where user has at least READ access
-    roleMenus = rolePermissions.filter(p => p.actions.includes('READ')).map(p => p.menu);
+    roleMenus = rolePermissions
+      .filter((p) => p.actions.includes('READ'))
+      .map((p) => p.menu);
   }
 
   // 3. Fetch User Overrides (ABAC)
   const userPermissions = await prisma.userMenuPermission.findMany({
     where: { userId: user.id },
-    include: { menu: true }
+    include: { menu: true },
   });
 
   const userMenuMap = new Map();
-  userPermissions.forEach(p => {
-     if (p.actions.includes('READ')) {
-       userMenuMap.set(p.menu.id, p.menu);
-     } else {
-       // Explicitly denied READ access
-       userMenuMap.set(p.menu.id, null);
-     }
+  userPermissions.forEach((p) => {
+    if (p.actions.includes('READ')) {
+      userMenuMap.set(p.menu.id, p.menu);
+    } else {
+      // Explicitly denied READ access
+      userMenuMap.set(p.menu.id, null);
+    }
   });
 
   // 4. Merge
   const finalMenuMap = new Map();
-  roleMenus.forEach(m => {
-     // If user override didn't explicitly deny it
-     if (userMenuMap.get(m.id) !== null) {
-        finalMenuMap.set(m.id, m);
-     }
+  roleMenus.forEach((m) => {
+    // If user override didn't explicitly deny it
+    if (userMenuMap.get(m.id) !== null) {
+      finalMenuMap.set(m.id, m);
+    }
   });
 
   // Add any explicitly granted overrides
   userMenuMap.forEach((m, id) => {
-     if (m !== null) finalMenuMap.set(id, m);
+    if (m !== null) finalMenuMap.set(id, m);
   });
 
-  const sortedMenus = Array.from(finalMenuMap.values()).sort((a, b) => a.order - b.order);
-
-  res.status(HTTP_STATUS.OK).json(
-    new ApiResponse(HTTP_STATUS.OK, sortedMenus, 'User menus retrieved successfully.')
+  const sortedMenus = Array.from(finalMenuMap.values()).sort(
+    (a, b) => a.order - b.order,
   );
+
+  res
+    .status(HTTP_STATUS.OK)
+    .json(
+      new ApiResponse(
+        HTTP_STATUS.OK,
+        sortedMenus,
+        'User menus retrieved successfully.',
+      ),
+    );
 });

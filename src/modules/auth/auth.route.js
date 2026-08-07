@@ -14,6 +14,7 @@ router.post('/reset-password', authController.resetPassword);
 
 // Protected routes
 router.get('/profile', protect, authController.getProfile);
+router.put('/profile/images', protect, authController.updateProfileImages);
 router.post('/logout', protect, authController.logout);
 router.get('/my-menus', protect, authController.getMyMenus);
 

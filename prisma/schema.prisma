@@ -276,6 +276,8 @@ model User {
   role             Role
   isActive         Boolean  @default(true)
   isEmailVerified  Boolean  @default(false)
+  avatar           String?
+  banner           String?
   college          College?
   student          Student?
 
