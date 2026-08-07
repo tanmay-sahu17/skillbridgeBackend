@@ -1,7 +1,9 @@
 import prisma from '../../core/prisma.js';
 import { ApiError } from '../../core/ApiError.js';
 import { HTTP_STATUS, ONBOARDING_SECTIONS } from '../../constants/index.js';
-import cloudinary from '../../config/cloudinary.config.js';
+import cloudinary, {
+  uploadToCloudinary,
+} from '../../config/cloudinary.config.js';
 import fs from 'fs/promises';
 import { sendOtpSMS } from '../../utils/sms.js';
 import { generateOtp, sendEmail } from '../../utils/mailer.js';
@@ -18,14 +20,14 @@ const updateSectionAndProgress = async (
   sectionField,
   data,
   isComplete = true,
-  sectionsToRemove = []
+  sectionsToRemove = [],
 ) => {
   const college = await prisma.college.findUnique({ where: { userId } });
 
   if (!college) {
     throw new ApiError(
       HTTP_STATUS.NOT_FOUND,
-      'College record not found. Please register first.'
+      'College record not found. Please register first.',
     );
   }
 
@@ -37,7 +39,9 @@ const updateSectionAndProgress = async (
 
   // Remove sections if requested (e.g., when resetting verification)
   if (sectionsToRemove && sectionsToRemove.length > 0) {
-    completedSections = completedSections.filter(s => !sectionsToRemove.includes(s));
+    completedSections = completedSections.filter(
+      (s) => !sectionsToRemove.includes(s),
+    );
   }
 
   // Calculate next step (highest completed + 1, max 8)
@@ -59,35 +63,6 @@ const updateSectionAndProgress = async (
 // Helper: Upload file to Cloudinary
 // ═══════════════════════════════════════════
 
-/**
- * Upload file to Cloudinary with organized folder structure:
- * skillbridge/{role}/{userId}/{category}
- *
- * Example paths:
- *   skillbridge/college/abc123/logos
- *   skillbridge/college/abc123/certificates
- *   skillbridge/student/xyz456/resume
- *   skillbridge/recruiter/xyz789/profile
- */
-const uploadToCloudinary = async (filePath, role, userId, category) => {
-  try {
-    const result = await cloudinary.uploader.upload(filePath, {
-      folder: `skillbridge/${role}/${userId}/${category}`,
-      resource_type: 'auto',
-    });
-    // Delete local temp file after successful upload
-    await fs.unlink(filePath);
-    return result.secure_url;
-  } catch (error) {
-    // Clean up temp file on error too
-    await fs.unlink(filePath).catch(() => {});
-    throw new ApiError(
-      HTTP_STATUS.INTERNAL_SERVER_ERROR,
-      `File upload failed: ${error.message}`
-    );
-  }
-};
-
 // ═══════════════════════════════════════════
 // Section 1: Basic Information
 // ═══════════════════════════════════════════
@@ -97,7 +72,7 @@ export const saveBasicInfo = async (userId, data) => {
     userId,
     ONBOARDING_SECTIONS.BASIC_INFO,
     'basicInfo',
-    data
+    data,
   );
 };
 
@@ -144,7 +119,10 @@ export const saveContactInfo = async (userId, data) => {
 
   if (resetEmail || resetMobile) {
     // Modify verification state
-    const existingVerification = college.verification || { emailVerified: false, mobileVerified: false };
+    const existingVerification = college.verification || {
+      emailVerified: false,
+      mobileVerified: false,
+    };
     const newVerification = {
       ...existingVerification,
       emailVerified: resetEmail ? false : existingVerification.emailVerified,
@@ -158,8 +136,8 @@ export const saveContactInfo = async (userId, data) => {
     await prisma.college.update({
       where: { userId },
       data: {
-        verification: { set: newVerification }
-      }
+        verification: { set: newVerification },
+      },
     });
   }
 
@@ -169,7 +147,7 @@ export const saveContactInfo = async (userId, data) => {
     'contactInfo',
     data,
     true,
-    sectionsToRemove
+    sectionsToRemove,
   );
 };
 
@@ -182,7 +160,7 @@ export const saveAddress = async (userId, data) => {
     userId,
     ONBOARDING_SECTIONS.ADDRESS,
     'address',
-    data
+    data,
   );
 };
 
@@ -198,7 +176,7 @@ export const saveRepresentative = async (userId, data) => {
     {
       ...data,
       employeeId: data.employeeId || null,
-    }
+    },
   );
 };
 
@@ -219,19 +197,25 @@ export const saveDocuments = async (userId, files) => {
   if (files.collegeLogo?.[0]) {
     documentData.collegeLogo = await uploadToCloudinary(
       files.collegeLogo[0].path,
-      'college', userId, 'logos'
+      'college',
+      userId,
+      'logos',
     );
   }
   if (files.affiliationCert?.[0]) {
     documentData.affiliationCert = await uploadToCloudinary(
       files.affiliationCert[0].path,
-      'college', userId, 'certificates'
+      'college',
+      userId,
+      'certificates',
     );
   }
   if (files.authorizationLetter?.[0]) {
     documentData.authorizationLetter = await uploadToCloudinary(
       files.authorizationLetter[0].path,
-      'college', userId, 'certificates'
+      'college',
+      userId,
+      'certificates',
     );
   }
 
@@ -242,13 +226,13 @@ export const saveDocuments = async (userId, files) => {
   if (!documentData.affiliationCert && !existingDocs.affiliationCert) {
     throw new ApiError(
       HTTP_STATUS.BAD_REQUEST,
-      'Affiliation Certificate is required.'
+      'Affiliation Certificate is required.',
     );
   }
   if (!documentData.authorizationLetter && !existingDocs.authorizationLetter) {
     throw new ApiError(
       HTTP_STATUS.BAD_REQUEST,
-      'Authorization Letter is required.'
+      'Authorization Letter is required.',
     );
   }
 
@@ -256,25 +240,33 @@ export const saveDocuments = async (userId, files) => {
   if (files.naacCertificate?.[0]) {
     documentData.naacCertificate = await uploadToCloudinary(
       files.naacCertificate[0].path,
-      'college', userId, 'certificates'
+      'college',
+      userId,
+      'certificates',
     );
   }
   if (files.nirfCertificate?.[0]) {
     documentData.nirfCertificate = await uploadToCloudinary(
       files.nirfCertificate[0].path,
-      'college', userId, 'certificates'
+      'college',
+      userId,
+      'certificates',
     );
   }
   if (files.collegeBrochure?.[0]) {
     documentData.collegeBrochure = await uploadToCloudinary(
       files.collegeBrochure[0].path,
-      'college', userId, 'brochures'
+      'college',
+      userId,
+      'brochures',
     );
   }
   if (files.gstCertificate?.[0]) {
     documentData.gstCertificate = await uploadToCloudinary(
       files.gstCertificate[0].path,
-      'college', userId, 'certificates'
+      'college',
+      userId,
+      'certificates',
     );
   }
 
@@ -282,7 +274,12 @@ export const saveDocuments = async (userId, files) => {
   if (files.otherCertificates?.length > 0) {
     documentData.otherCertificates = [];
     for (const file of files.otherCertificates) {
-      const url = await uploadToCloudinary(file.path, 'college', userId, 'certificates');
+      const url = await uploadToCloudinary(
+        file.path,
+        'college',
+        userId,
+        'certificates',
+      );
       documentData.otherCertificates.push(url);
     }
   }
@@ -297,7 +294,7 @@ export const saveDocuments = async (userId, files) => {
     userId,
     ONBOARDING_SECTIONS.DOCUMENTS,
     'documents',
-    mergedDocs
+    mergedDocs,
   );
 };
 
@@ -310,7 +307,7 @@ export const saveAcademicInfo = async (userId, data) => {
     userId,
     ONBOARDING_SECTIONS.ACADEMIC_INFO,
     'academicInfo',
-    data
+    data,
   );
 };
 
@@ -323,32 +320,41 @@ export const saveVerification = async (userId, data) => {
     userId,
     ONBOARDING_SECTIONS.VERIFICATION,
     'verification',
-    data
+    data,
   );
 };
 
 export const sendMobileOtp = async (userId) => {
   const college = await prisma.college.findUnique({ where: { userId } });
   if (!college || !college.contactInfo || !college.contactInfo.officialMobile) {
-    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Please save contact info with a valid mobile number first.');
+    throw new ApiError(
+      HTTP_STATUS.BAD_REQUEST,
+      'Please save contact info with a valid mobile number first.',
+    );
   }
 
   const mobile = college.contactInfo.officialMobile;
 
   if (college.verification?.mobileVerified) {
-    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Mobile number is already verified.');
+    throw new ApiError(
+      HTTP_STATUS.BAD_REQUEST,
+      'Mobile number is already verified.',
+    );
   }
 
   // Check rate limit before sending OTP
   await checkOtpRateLimit(mobile);
-  
+
   // Request SMS from Twilio which auto-generates the OTP
   const message = await sendOtpSMS(mobile);
-  
+
   // Extract OTP from Twilio response body: "Your verification code is 482913..."
   const match = message?.body?.match(/verification code is (\d+)/);
   if (!match) {
-    throw new ApiError(HTTP_STATUS.INTERNAL_SERVER_ERROR, 'Failed to generate OTP via SMS provider.');
+    throw new ApiError(
+      HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      'Failed to generate OTP via SMS provider.',
+    );
   }
   const otp = match[1];
 
@@ -372,9 +378,15 @@ export const verifyMobileOtp = async (userId, otp) => {
     orderBy: { createdAt: 'desc' },
   });
 
-  if (!otpRecord) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'No OTP found. Please request a new one.');
-  if (otpRecord.otp !== otp) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid OTP.');
-  if (new Date() > otpRecord.expiresAt) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'OTP has expired.');
+  if (!otpRecord)
+    throw new ApiError(
+      HTTP_STATUS.BAD_REQUEST,
+      'No OTP found. Please request a new one.',
+    );
+  if (otpRecord.otp !== otp)
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid OTP.');
+  if (new Date() > otpRecord.expiresAt)
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'OTP has expired.');
 
   await prisma.otp.deleteMany({ where: { mobile } });
 
@@ -382,38 +394,65 @@ export const verifyMobileOtp = async (userId, otp) => {
   await resetOtpTracker(mobile);
 
   // Update verification status
-  const existingVerification = college.verification || { emailVerified: false, mobileVerified: false };
+  const existingVerification = college.verification || {
+    emailVerified: false,
+    mobileVerified: false,
+  };
   const newVerification = { ...existingVerification, mobileVerified: true };
-  const isComplete = newVerification.emailVerified && newVerification.mobileVerified;
+  const isComplete =
+    newVerification.emailVerified && newVerification.mobileVerified;
 
   return updateSectionAndProgress(
     userId,
     ONBOARDING_SECTIONS.VERIFICATION,
     'verification',
     newVerification,
-    isComplete
+    isComplete,
   );
 };
 
 export const sendEmailOtp = async (userId) => {
-  const college = await prisma.college.findUnique({ where: { userId }, include: { user: true } });
+  const college = await prisma.college.findUnique({
+    where: { userId },
+    include: { user: true },
+  });
   if (!college || !college.contactInfo || !college.contactInfo.officialEmail) {
-    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Please save contact info with a valid official email first.');
+    throw new ApiError(
+      HTTP_STATUS.BAD_REQUEST,
+      'Please save contact info with a valid official email first.',
+    );
   }
 
   const officialEmail = college.contactInfo.officialEmail;
   if (college.verification?.emailVerified) {
-    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Official email is already verified.');
+    throw new ApiError(
+      HTTP_STATUS.BAD_REQUEST,
+      'Official email is already verified.',
+    );
   }
 
   if (officialEmail === college.user.email) {
     // Auto-verify if it matches the registered email
-    const existingVerification = college.verification || { emailVerified: false, mobileVerified: false };
+    const existingVerification = college.verification || {
+      emailVerified: false,
+      mobileVerified: false,
+    };
     const newVerification = { ...existingVerification, emailVerified: true };
-    const isComplete = newVerification.emailVerified && newVerification.mobileVerified;
-    
-    await updateSectionAndProgress(userId, ONBOARDING_SECTIONS.VERIFICATION, 'verification', newVerification, isComplete);
-    return { message: 'Official email matches signup email and has been automatically verified.', autoVerified: true };
+    const isComplete =
+      newVerification.emailVerified && newVerification.mobileVerified;
+
+    await updateSectionAndProgress(
+      userId,
+      ONBOARDING_SECTIONS.VERIFICATION,
+      'verification',
+      newVerification,
+      isComplete,
+    );
+    return {
+      message:
+        'Official email matches signup email and has been automatically verified.',
+      autoVerified: true,
+    };
   }
 
   await checkOtpRateLimit(officialEmail);
@@ -424,8 +463,15 @@ export const sendEmailOtp = async (userId) => {
   await prisma.otp.create({ data: { email: officialEmail, otp, expiresAt } });
 
   const emailHtml = getOtpTemplate(otp);
-  await sendEmail(officialEmail, 'SkillBridge - Verify Official Email', emailHtml);
-  return { message: 'OTP sent successfully to ' + officialEmail, autoVerified: false };
+  await sendEmail(
+    officialEmail,
+    'SkillBridge - Verify Official Email',
+    emailHtml,
+  );
+  return {
+    message: 'OTP sent successfully to ' + officialEmail,
+    autoVerified: false,
+  };
 };
 
 export const verifyEmailOtp = async (userId, otp) => {
@@ -440,23 +486,33 @@ export const verifyEmailOtp = async (userId, otp) => {
     orderBy: { createdAt: 'desc' },
   });
 
-  if (!otpRecord) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'No OTP found. Please request a new one.');
-  if (otpRecord.otp !== otp) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid OTP.');
-  if (new Date() > otpRecord.expiresAt) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'OTP has expired.');
+  if (!otpRecord)
+    throw new ApiError(
+      HTTP_STATUS.BAD_REQUEST,
+      'No OTP found. Please request a new one.',
+    );
+  if (otpRecord.otp !== otp)
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid OTP.');
+  if (new Date() > otpRecord.expiresAt)
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'OTP has expired.');
 
   await prisma.otp.deleteMany({ where: { email } });
   await resetOtpTracker(email);
 
-  const existingVerification = college.verification || { emailVerified: false, mobileVerified: false };
+  const existingVerification = college.verification || {
+    emailVerified: false,
+    mobileVerified: false,
+  };
   const newVerification = { ...existingVerification, emailVerified: true };
-  const isComplete = newVerification.emailVerified && newVerification.mobileVerified;
+  const isComplete =
+    newVerification.emailVerified && newVerification.mobileVerified;
 
   return updateSectionAndProgress(
     userId,
     ONBOARDING_SECTIONS.VERIFICATION,
     'verification',
     newVerification,
-    isComplete
+    isComplete,
   );
 };
 
@@ -475,13 +531,13 @@ export const acceptTerms = async (userId, data) => {
   const requiredSections = [1, 2, 3, 4, 5, 6, 7];
   const completedSections = college.completedSections || [];
   const missingSections = requiredSections.filter(
-    (s) => !completedSections.includes(s)
+    (s) => !completedSections.includes(s),
   );
 
   if (missingSections.length > 0) {
     throw new ApiError(
       HTTP_STATUS.BAD_REQUEST,
-      `Please complete all sections before accepting terms. Missing sections: ${missingSections.join(', ')}`
+      `Please complete all sections before accepting terms. Missing sections: ${missingSections.join(', ')}`,
     );
   }
 
@@ -572,7 +628,7 @@ export const getCollegeList = async () => {
     },
   });
 
-  return colleges.map(c => ({
+  return colleges.map((c) => ({
     id: c.id,
     collegeName: c.basicInfo?.collegeName,
     shortName: c.basicInfo?.shortName,

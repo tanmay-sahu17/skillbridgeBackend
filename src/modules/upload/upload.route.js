@@ -3,6 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { protect } from '../../middlewares/auth.middleware.js';
+import { uploadToCloudinary } from '../../config/cloudinary.config.js';
 import { uploadToImageKit } from '../../config/imagekit.config.js';
 
 const router = Router();
@@ -37,13 +38,23 @@ router.post('/', protect, upload.single('file'), async (req, res) => {
 
     const role = req.user.role.toLowerCase();
     const category = req.body.folder || 'general';
-    const url = await uploadToImageKit(
-      req.file.path,
-      role,
-      req.user.id,
-      category,
-      req.file.originalname,
-    );
+    let url;
+    if (role === 'college') {
+      url = await uploadToCloudinary(
+        req.file.path,
+        role,
+        req.user.id,
+        category,
+      );
+    } else {
+      url = await uploadToImageKit(
+        req.file.path,
+        role,
+        req.user.id,
+        category,
+        req.file.originalname,
+      );
+    }
 
     res.status(200).json({
       success: true,
